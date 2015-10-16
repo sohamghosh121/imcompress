@@ -10,13 +10,23 @@
 using namespace cv;
 
 Encoder::Encoder(Mat img) {
-	// TODO Auto-generated constructor stub
 	cv::cvtColor(img, this->img, CV_RGB2GRAY, 0);
+	this->img.convertTo(this->img, CV_32FC1);
+	this->keyPhi = getPhi(this->Mk);
+	this->nonkeyPhi = getPhi(this->Mw);
 }
 
-void Encoder::getPhi(int m, int n, cv::Mat dst){
+
+cv::Mat Encoder::getPhi(double measurementRate){  // measurement rate = Mr/B^2
+	double B_sq = this->blockSize * this->blockSize;
+	return getPhi(measurementRate * B_sq, B_sq);
+}
+
+cv::Mat Encoder::getPhi(int m, int n){
+	Mat dst = Mat(m, n, CV_32FC1);
 	static cv::RNG rng(666);
 	rng.fill(dst, RNG::NORMAL, 0.0, 1.0/(double(n)), false);
+	return dst;
 }
 
 Mat Encoder::getNthBlock(int n){ // this is 0 indexed
@@ -25,14 +35,16 @@ Mat Encoder::getNthBlock(int n){ // this is 0 indexed
 	int nc = this->img.cols / this -> blockSize;
 	int nr = this->img.rows / this -> blockSize;
 	colStart = (n % nc) * this->blockSize;
-	rowStart = (n / nr) * this->blockSize;
-	return this->img.colRange(colStart, colStart+this->blockSize-1).rowRange(rowStart, rowStart+7);
+	rowStart = (n / nc) * this->blockSize;
+	Mat x = Mat(this->img.colRange(colStart, colStart+this->blockSize).rowRange(rowStart, rowStart+this->blockSize));
+	return x.clone().reshape(1, this->blockSize*this->blockSize);
 }
 
-Mat Encoder::encodeBlock(Mat x, Mat phi){
-	Mat res = Mat();
-	Mat zero = Mat::zeros(phi.rows, x.cols, CV_64FC1);
-	gemm(x, phi, 1.0, zero, 0.0, res);
+Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
+	Mat res = Mat(phi.rows, 1, CV_32FC1);
+	Mat zero = Mat::zeros(phi.rows, 1, CV_32FC1);
+//	printf("res.size: (%d, %d)\tzero.size: (%d, %d)\tx.size: (%d, %d)\tphi.size: (%d, %d)\n", res.rows, res.cols, zero.rows, zero.cols, x.rows, x.cols, phi.rows, phi.cols);
+	gemm(phi, x, 1.0, zero, 0.0, res);
 	return res;
 }
 
@@ -45,38 +57,22 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 }
 
 void Encoder::encodeImage(){
-	int i, nr, nc;
+	int i, nr, nc, M_count;
 	nr = this->img.rows / this->blockSize;
 	nc = this->img.cols / this->blockSize;
 //	if (hasPhi()){
-	Mat y_w;
-		for (i = 1; i < nr * nc; i++){
-			y_w = encodeKeyBlock(getNthBlock(i));
-			double tau = getTau();
-			double lambda = getLambda(y_w);
-			if (tau > lambda){
-				// key block
-			} else {
-				// WZ block
-			}
+	Mat y_key, y_wz;
+	for (i = 1; i < nr * nc; i++, M_count--){
+		if (M == 0){ // finished encoding all GOB blocks, next GOB
+			y_key = encodeKeyBlock(getNthBlock(i));
+			this->encoded[i] = &y_key;
+			M_count = this->M - 1;
+		} else {
+			y_wz = encodeNonKeyBlock(getNthBlock(i));
+			this->encoded[i] = &y_wz;
 		}
-//	}
+	}
 
-}
-
-double Encoder::getTau(){
-	return 0.0;
-}
-
-double Encoder::getLambda(cv::Mat y_w){
-	return 0.0;
-}
-
-double calculateMSE(Mat a, Mat b){
-	Mat res = Mat::zeros(1, 1, CV_32FC1);
-	Mat zero = Mat::zeros(1, 1, CV_32FC1);
-	gemm((a-b).t(), (a-b), 1.0, zero, 0.0, res);
-	return res.at<double>(0,0);
 }
 
 Encoder::~Encoder() {

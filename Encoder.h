@@ -15,17 +15,18 @@
 
 class Encoder {
 private:
-	const float Mk = 1.0;
-	const float Mw = 2.0;
-	const float C = 1.0;
+	const double Mk = 1.0;
+	const double Mw = 2.0;
+	const double C = 1.0;
 	const int blockSize = 8;
+	const int M = 4;
 
-	// generate random matrix
-	void getPhi(int, int, cv::Mat);
+	// generate phi matrix
+	cv::Mat getPhi(double);
+	cv::Mat getPhi(int, int);
 
-	std::map<int, cv::Mat *> D;
+	std::map<int, cv::Mat *> encoded;
 	cv::Mat img;
-	bool isKeyBlock();
 
 	cv::Mat keyPhi;
 	cv::Mat nonkeyPhi;
@@ -35,11 +36,6 @@ private:
 	cv::Mat encodeBlock(cv::Mat, cv::Mat);
 	cv::Mat encodeKeyBlock(cv::Mat);
 	cv::Mat encodeNonKeyBlock(cv::Mat);
-
-	// helper functions
-	double calculateMSE(cv::Mat, cv::Mat);
-	double getTau();  // get min MSE between y_w and columns of D
-	double getLambda(cv::Mat);
 
 public:
 	Encoder(cv::Mat);
