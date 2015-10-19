@@ -8,6 +8,7 @@
 #ifndef ENCODER_H_
 #define ENCODER_H_
 
+#include "Options.h"
 #include <opencv2/opencv.hpp>
 #include <random>
 
@@ -15,17 +16,13 @@
 
 class Encoder {
 private:
-	const double Mk = 1.0;
-	const double Mw = 2.0;
-	const double C = 1.0;
-	const int blockSize = 8;
-	const int M = 4;
+	const Options opts;
 
 	// generate phi matrix
 	cv::Mat getPhi(double);
 	cv::Mat getPhi(int, int);
 
-	std::map<int, cv::Mat *> encoded;
+	std::map<int, cv::Mat *> encoded;  // will find more efficient representations later.
 	cv::Mat img;
 
 	cv::Mat keyPhi;
@@ -40,6 +37,9 @@ private:
 public:
 	Encoder(cv::Mat);
 	void encodeImage();
+	std::map<int, cv::Mat *> getEncodedValues();
+	cv::Mat getKeyPhi();
+	cv::Mat getnonkeyPhi();
 	virtual ~Encoder();
 };
 
