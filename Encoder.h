@@ -22,7 +22,7 @@ private:
 	cv::Mat getPhi(double);
 	cv::Mat getPhi(int, int);
 
-	std::map<int, cv::Mat *> encoded;  // will find more efficient representations later.
+	std::map<int, cv::Mat> encoded;  // will find more efficient representations later.
 	cv::Mat img;
 
 	cv::Mat keyPhi;
@@ -37,7 +37,7 @@ private:
 public:
 	Encoder(cv::Mat);
 	void encodeImage();
-	std::map<int, cv::Mat *> getEncodedValues();
+	std::map<int, cv::Mat> getEncodedValues();
 	cv::Mat getKeyPhi();
 	cv::Mat getnonkeyPhi();
 	virtual ~Encoder();

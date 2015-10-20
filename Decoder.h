@@ -17,14 +17,14 @@ private:
 
 	cv::Mat keyPhi;
 	cv::Mat nonkeyPhi;
-	std::map<int, cv::Mat *> encoded;
+	std::map<int, cv::Mat> encoded;
 	cv::Size imsize;
 	cv::Mat img;
 
 	void fillNthBlock(int, cv::Mat);
 	cv::Mat decodeBlock(cv::Mat, cv::Mat);
 public:
-	Decoder(int, int, cv::Mat, cv::Mat, std::map<int, cv::Mat *>);
+	Decoder(int, int, cv::Mat, cv::Mat, std::map<int, cv::Mat>);
 	Decoder(cv::Size);
 	void decodeImage();
 	cv::Mat getDecodedImage();

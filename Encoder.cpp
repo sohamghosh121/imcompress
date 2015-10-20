@@ -30,7 +30,7 @@ cv::Mat Encoder::getPhi(int m, int n){
 }
 
 Mat Encoder::getNthBlock(int n){ // this is 0 indexed
-	assert(n > 0 && n < (this->img.cols * this->img.rows/(this->opts.getBlockSize() * this->opts.getBlockSize())));
+	assert(n >= 0 && n < (this->img.cols * this->img.rows/(this->opts.getBlockSize() * this->opts.getBlockSize())));
 	int rowStart, colStart;
 	int nc = this->img.cols / this->opts.getBlockSize();
 	int nr = this->img.rows / this->opts.getBlockSize();
@@ -63,17 +63,16 @@ void Encoder::encodeImage(){
 //	if (hasPhi()){
 	M_count = 0;
 	Mat y_key, y_wz;
-	for (i = 1; i < nr * nc; i++, M_count--){
+	for (i = 0; i < nr * nc; i++, M_count--){
 		if (M_count == 0){ // finished encoding all GOB blocks, next GOB
 			y_key = encodeKeyBlock(getNthBlock(i));
-			this->encoded[i] = &y_key;
-			M_count = this->opts.getM() - 1;
+			this->encoded[i] = y_key;
+			M_count = this->opts.getM();
 		} else {
 			y_wz = encodeNonKeyBlock(getNthBlock(i));
-			this->encoded[i] = &y_wz;
+			this->encoded[i] = y_wz;
 		}
 	}
-
 }
 
 cv::Mat Encoder::getKeyPhi(){
@@ -83,7 +82,7 @@ cv::Mat Encoder::getnonkeyPhi(){
 	return this->nonkeyPhi;
 }
 
-std::map<int, cv::Mat *> Encoder::getEncodedValues(){
+std::map<int, cv::Mat> Encoder::getEncodedValues(){
 	return this->encoded;
 }
 
