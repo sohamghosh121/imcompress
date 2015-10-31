@@ -45,7 +45,7 @@ void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed
 	int nr = this->img.rows / this->opts.getBlockSize();
 	colStart = (n % nc) * this->opts.getBlockSize();
 	rowStart = (n / nc) * this->opts.getBlockSize();
-	std::cout << block << std::endl;
+//	std::cout << block << std::endl;
 	Mat tmpblock = this->img.colRange(colStart, colStart+this->opts.getBlockSize()).rowRange(rowStart, rowStart + this->opts.getBlockSize());
 	block.copyTo(tmpblock);
 }

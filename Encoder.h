@@ -10,7 +10,6 @@
 
 #include "Options.h"
 #include <opencv2/opencv.hpp>
-#include <random>
 
 // Assume image is multiple of block size for now
 
@@ -28,7 +27,9 @@ private:
 	cv::Mat keyPhi;
 	cv::Mat nonkeyPhi;
 
-	cv::Mat getNthBlock(int);
+	cv::Mat getNthBlock(int, cv::Mat);
+	cv::Mat getGOB(int);
+
 
 	cv::Mat encodeBlock(cv::Mat, cv::Mat);
 	cv::Mat encodeKeyBlock(cv::Mat);
