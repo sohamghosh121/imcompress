@@ -15,19 +15,19 @@ double getPSNR(cv::Mat original, cv::Mat reconstructed){
 
 
 int main(int argc, char** argv) {
-//	std::printf("%s\n", argv[1]);
-//	cv::Mat inputImage = cv::imread("/Users/sohamghosh/photo.jpg");
-//	std::printf("size(%d, %d)\n", inputImage.rows, inputImage.cols);
-//
-////	cv::imshow("Input", inputImage);
-//
-//	Encoder e(inputImage);
-//	e.encodeImage();
-//	Decoder d(inputImage.rows, inputImage.cols, e.getKeyPhi(), e.getnonkeyPhi(), e.getEncodedValues());
-//	d.decodeImage();
-//	std::cout << d.getDecodedImage();
-//	cv::imshow("Output", d.getDecodedImage());
-//	cv::waitKey(0);
-	std::cout << SBHE(8, 12, 4, 5).getSBHEmat();
+	std::printf("%s\n", argv[1]);
+	cv::Mat inputImage = cv::imread("/Users/sohamghosh/photo.jpg");
+	std::printf("size(%d, %d)\n", inputImage.rows, inputImage.cols);
+
+//	cv::imshow("Input", inputImage);
+
+	Encoder e(inputImage);
+	e.encodeImage();
+	Decoder d(inputImage.rows, inputImage.cols, e.getKeyPhi(), e.getnonkeyPhi(), e.getEncodedValues());
+	d.decodeImage();
+	std::cout << d.getDecodedImage();
+	cv::imshow("Output", d.getDecodedImage());
+	cv::waitKey(0);
+//	std::cout << SBHE(8, 12, 4, 5).getSBHEmat();
 	return 0;
 }

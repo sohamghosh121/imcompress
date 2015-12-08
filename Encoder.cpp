@@ -6,6 +6,8 @@
  */
 
 #include "Encoder.h"
+#include "SBHE.h"
+#include "Wavelet.h"
 #include <cmath>
 
 using namespace cv;
@@ -20,14 +22,12 @@ Encoder::Encoder(Mat img) {
 
 cv::Mat Encoder::getPhi(double measurementRate){  // measurement rate = Mr/B^2
 	double B_sq = this->opts.getBlockSize() * this->opts.getBlockSize();
-	return getPhi(measurementRate * B_sq, B_sq);
+	return getPhi(int(measurementRate * B_sq), B_sq);
 }
 
 cv::Mat Encoder::getPhi(int m, int n){
-	Mat dst = Mat(m, n, CV_32FC1);
-	static cv::RNG rng(666);
-	rng.fill(dst, RNG::NORMAL, 0.0, 1.0/(double(n)), false);
-	return dst;
+	SBHE h = SBHE(m, n, n / 16, 11);
+	return h.getSBHEmat();
 }
 
 Mat Encoder::getNthBlock(int n, Mat gob){ // this is 0 indexed
@@ -40,7 +40,6 @@ Mat Encoder::getGOB(int n){
 	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(this->opts.getBlockSize(), 2) * pow(this->opts.getBlockSize(), 2))));
 	int rowStart, colStart;
 	int nc = this->img.cols / (this->opts.getBlockSize() * this->opts.getM());
-	int nr = this->img.rows / (this->opts.getBlockSize() * this->opts.getM());
 	colStart = (n % nc) * this->opts.getBlockSize();
 	rowStart = (n / nc) * this->opts.getBlockSize();
 	Mat x = Mat(this->img.colRange(colStart, colStart+this->opts.getBlockSize()).rowRange(rowStart, rowStart+this->opts.getBlockSize()));
@@ -64,29 +63,22 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 }
 
 void Encoder::encodeImage(){
+	assert(img.cols == img.rows);
 	int numGOBs = this->img.cols * this->img.rows/(pow(this->opts.getBlockSize(), 2) * pow(this->opts.getBlockSize(), 2));
+	Mat y;
+	this->f = Wavelet(this->img, Wavelet::DWT).getResult();
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
 		for (int j = 0; j < pow(this->opts.getM(), 2); j++){
 			Mat block = getNthBlock(j, gob);
+			if (j == 0){  // key block
+				y = encodeKeyBlock(block);
+			} else {
+				y = encodeNonKeyBlock(block);
+			}
+			encoded[i] = y;
 		}
 	}
-//	int i, nr, nc, M_count;
-//	nr = this->img.rows / this->opts.getBlockSize();
-//	nc = this->img.cols / this->opts.getBlockSize();
-////	if (hasPhi()){
-//	M_count = 0;
-//	Mat y_key, y_wz;
-//	for (i = 0; i < nr * nc; i++, M_count--){
-//		if (M_count == 0){ // finished encoding all GOB blocks, next GOB
-//			y_key = encodeKeyBlock(getNthBlock(i));
-//			this->encoded[i] = y_key;
-//			M_count = this->opts.getM();
-//		} else {
-//			y_wz = encodeNonKeyBlock(getNthBlock(i));
-//			this->encoded[i] = y_wz;
-//		}
-//	}
 }
 
 cv::Mat Encoder::getKeyPhi(){

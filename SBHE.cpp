@@ -19,7 +19,7 @@ Point pt(int i, Mat H){
 }
 
 int getPi(int i, int n, int A){
-	return (A * (i + 1) % n );
+	return (A * (i - 1) % n );
 }
 
 bool isPowerOfTwo (unsigned int x)
@@ -28,8 +28,6 @@ bool isPowerOfTwo (unsigned int x)
 		x /= 2;
 	return (x == 1);
 }
-
-//////////
 
 SBHE::SBHE(int M, int N, int B, int A) {
 	assert(N % B == 0 && isPowerOfTwo(B));

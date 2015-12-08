@@ -33,3 +33,9 @@ Debug/*
 
 # Debug files
 *.dSYM/
+
+# Papers
+Papers/*
+
+# Mac OSX
+.DS_Store

@@ -12,7 +12,7 @@ class Options {
 private:
 	double Mk = 0.4;
 	double Mw = 0.2;
-	double C = 1.0;
+//	double C = 1.0;
 	int blockSize = 8;
 	int M = 4;
 
@@ -28,13 +28,13 @@ public:
 		this->blockSize = blockSize;
 	}
 
-	double getC() const {
-		return C;
-	}
+//	double getC() const {
+//		return C;
+//	}
 
-	void setC(double c = 1.0) {
-		C = c;
-	}
+//	void setC(double c = 1.0) {
+//		C = c;
+//	}
 
 	int getM() const {
 		return M;

@@ -6,6 +6,8 @@
  */
 
 #include "Decoder.h"
+#include "Wavelet.h"
+#include "SpaRSA.h"
 
 using namespace cv;
 
@@ -32,10 +34,10 @@ void Decoder::decodeImage(){
 }
 
 Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){
-	Mat decodedBlock;
-	gemm(block.t(), phi, 1.0, noArray(), 0.0, decodedBlock);
-	decodedBlock.reshape(1, this->opts.getBlockSize());
-	return decodedBlock;
+	SpaRSA solver = SpaRSA(block, phi);
+	Mat f = solver.reconstructed();
+	Mat decoded = Wavelet(f, Wavelet::IDWT).getResult();
+	return decoded;
 }
 
 void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed

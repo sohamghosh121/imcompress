@@ -23,6 +23,7 @@ private:
 
 	std::map<int, cv::Mat> encoded;  // will find more efficient representations later.
 	cv::Mat img;
+	cv::Mat f; // 2D wavelet transform of image
 
 	cv::Mat keyPhi;
 	cv::Mat nonkeyPhi;
