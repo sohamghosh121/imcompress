@@ -38,10 +38,10 @@ SBHE::SBHE(int M, int N, int B, int A) {
 	for (int i = 0; i < N/B; i++){
 		hadamard.copyTo(m.rowRange(hadamardBlockSize*i,hadamardBlockSize*(i+1)).colRange(hadamardBlockSize*i,hadamardBlockSize*(i+1)));
 	}
-	std::cout << m;
+//	std::cout << m;
 	std::cout << "got hadamard\n";
 	m = scrambleMatrix(m, A);
-	std::cout << m;
+//	std::cout << m;
 	std::cout << "scrambled\n";
 	this->SBHEmat = chooseMrows(m, M);
 	std::cout << "chose m rows\n";
@@ -94,6 +94,5 @@ Mat SBHE::getSBHEmat(){
 }
 
 SBHE::~SBHE() {
-	// TODO Auto-generated destructor stub
 }
 

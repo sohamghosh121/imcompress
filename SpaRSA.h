@@ -13,7 +13,7 @@
 
 class SpaRSA {
 private:
-	const double eta = 2.0;
+	const double eta = 1.1;
 	const double tau = 1.0;
 	const double sigma = 0.01;
 	const double tolP = 0.001;

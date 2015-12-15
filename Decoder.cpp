@@ -14,7 +14,6 @@ using namespace cv;
 // first try individual recovery
 
 Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> encoded) {
-	// TODO Auto-generated constructor stub
 	this->encoded = encoded;
 	this->keyPhi = keyPhi;
 	this->nonkeyPhi = nonkeyPhi;
@@ -56,6 +55,5 @@ Mat Decoder::getDecodedImage(){
 	return this->img;
 }
 Decoder::~Decoder() {
-	// TODO Auto-generated destructor stub
 }
 

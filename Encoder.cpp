@@ -15,13 +15,13 @@ using namespace cv;
 Encoder::Encoder(Mat img) {
 	cv::cvtColor(img, this->img, CV_RGB2GRAY, 0);
 	this->img.convertTo(this->img, CV_32FC1);
-	this->keyPhi = getPhi(this->opts.getMk());
-	this->nonkeyPhi = getPhi(this->opts.getMw());
+	this->keyPhi = getPhi(opts.getMk());
+	this->nonkeyPhi = getPhi(opts.getMw());
 }
 
 
 cv::Mat Encoder::getPhi(double measurementRate){  // measurement rate = Mr/B^2
-	double B_sq = this->opts.getBlockSize() * this->opts.getBlockSize();
+	double B_sq = opts.getBlockSize() * opts.getBlockSize();
 	return getPhi(int(measurementRate * B_sq), B_sq);
 }
 
@@ -31,26 +31,32 @@ cv::Mat Encoder::getPhi(int m, int n){
 }
 
 Mat Encoder::getNthBlock(int n, Mat gob){ // this is 0 indexed
-//	assert(n >= 0 && n < (this->img.cols * this->img.rows/(this->opts.getBlockSize() * this->opts.getBlockSize())));
-	assert(n >= 0 && n < this->opts.getM() * this->opts.getM());
-	return gob.rowRange(n*this->opts.getBlockSize(), (n+1)*this->opts.getBlockSize() - 1).clone();
+//	assert(n >= 0 && n < (this->img.cols * this->img.rows/(opts.getBlockSize() * opts.getBlockSize())));
+//	printf("gob size: (%d, %d)", gob.rows, gob.cols);
+//	std::cout << "block: " << n << std::endl;
+	assert(n >= 0 && n < opts.getM() * opts.getM());
+	return gob.rowRange(n*opts.getBlockSize()*opts.getBlockSize(), (n+1)*opts.getBlockSize()*opts.getBlockSize()).clone();
 }
 
 Mat Encoder::getGOB(int n){
-	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(this->opts.getBlockSize(), 2) * pow(this->opts.getBlockSize(), 2))));
+//	std::cout << "GOB: " << n << std::endl;
+	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(opts.getBlockSize(), 2) * pow(opts.getBlockSize(), 2))));
 	int rowStart, colStart;
-	int nc = this->img.cols / (this->opts.getBlockSize() * this->opts.getM());
-	colStart = (n % nc) * this->opts.getBlockSize();
-	rowStart = (n / nc) * this->opts.getBlockSize();
-	Mat x = Mat(this->img.colRange(colStart, colStart+this->opts.getBlockSize()).rowRange(rowStart, rowStart+this->opts.getBlockSize()));
-	return x.clone().reshape(1, this->opts.getBlockSize()*this->opts.getBlockSize());
+	int nc = this->f.cols / (opts.getBlockSize() * opts.getM());
+	colStart = (n % nc) * opts.getBlockSize();
+	rowStart = (n / nc) * opts.getBlockSize();
+	Mat x = Mat(this->f.colRange(colStart, colStart+opts.getBlockSize() * opts.getM()).rowRange(rowStart, rowStart+opts.getBlockSize() * opts.getM()));
+	return x.clone().reshape(1, opts.getBlockSize()*opts.getBlockSize()*opts.getM()*opts.getM());
 }
 
 Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
+//	std::cout << x;
 	Mat res = Mat(phi.rows, 1, CV_32FC1);
 	Mat zero = Mat::zeros(phi.rows, 1, CV_32FC1);
 //	printf("res.size: (%d, %d)\tzero.size: (%d, %d)\tx.size: (%d, %d)\tphi.size: (%d, %d)\n", res.rows, res.cols, zero.rows, zero.cols, x.rows, x.cols, phi.rows, phi.cols);
+
 	gemm(phi, x, 1.0, noArray(), 0.0, res);
+
 	return res;
 }
 
@@ -64,19 +70,21 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 
 void Encoder::encodeImage(){
 	assert(img.cols == img.rows);
-	int numGOBs = this->img.cols * this->img.rows/(pow(this->opts.getBlockSize(), 2) * pow(this->opts.getBlockSize(), 2));
+	int numGOBs = this->img.cols * this->img.rows/(pow(opts.getBlockSize(), 2) * pow(opts.getBlockSize(), 2));
 	Mat y;
-	this->f = Wavelet(this->img, Wavelet::DWT).getResult();
+	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
+	imshow("Wavelet", this->f);
+//	imshow("Check inverse", Wavelet(this->f, Wavelet::IDWT).getResult());
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
-		for (int j = 0; j < pow(this->opts.getM(), 2); j++){
+		for (int j = 0; j < pow(opts.getM(), 2); j++){
 			Mat block = getNthBlock(j, gob);
 			if (j == 0){  // key block
 				y = encodeKeyBlock(block);
 			} else {
 				y = encodeNonKeyBlock(block);
 			}
-			encoded[i] = y;
+			encoded[i*opts.getM() + j] = y;
 		}
 	}
 }

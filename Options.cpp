@@ -8,11 +8,9 @@
 #include "Options.h"
 
 Options::Options() {
-	// TODO Auto-generated constructor stub
 
 }
 
 Options::~Options() {
-	// TODO Auto-generated destructor stub
 }
 
