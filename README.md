@@ -5,6 +5,5 @@ This uses the technique described in 'Compressed Sensing-Based Distributed Image
 
 Uses:
 - OpenCV
-- cvdwt (author: David Barina <ibarina@fit.vutbr.cz>)
 
 Still in development.
