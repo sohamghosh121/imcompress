@@ -11,7 +11,7 @@
 
 using namespace cv;
 
-int A = 7;
+int A = 13;
 
 // helper methods
 Point pt(int i, Mat H){

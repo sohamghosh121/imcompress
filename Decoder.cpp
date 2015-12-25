@@ -19,24 +19,28 @@ Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> e
 	this->nonkeyPhi = nonkeyPhi;
 	this->imsize = cv::Size(nr, nc);
 	this->img = Mat(imsize, CV_32FC1);
+	this->f = Mat(imsize, CV_32FC1);
 }
 
 void Decoder::decodeImage(){
 	int i = 0;
+	std::cout<< encoded.size() << " blocks to decode\n";
 	for (i = 0; i < this->encoded.size(); i++){
-		if (i % this->opts.getM() == 0) { // key block
+		std::cout<< i << "--> ";
+		if (i % (opts.getM() * opts.getM()) == 0) { // key block
 			fillNthBlock(i, decodeBlock(this->encoded[i], this->keyPhi));
 		} else {
 			fillNthBlock(i, decodeBlock(this->encoded[i], this->nonkeyPhi));
 		}
 	}
+
+	this->img = Wavelet(f, Wavelet::IDWT).getResult();
 }
 
 Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){
 	SpaRSA solver = SpaRSA(block, phi);
 	Mat f = solver.reconstructed();
-	Mat decoded = Wavelet(f, Wavelet::IDWT).getResult();
-	return decoded;
+	return f;
 }
 
 void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed
@@ -47,7 +51,7 @@ void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed
 	colStart = (n % nc) * this->opts.getBlockSize();
 	rowStart = (n / nc) * this->opts.getBlockSize();
 //	std::cout << block << std::endl;
-	Mat tmpblock = this->img.colRange(colStart, colStart+this->opts.getBlockSize()).rowRange(rowStart, rowStart + this->opts.getBlockSize());
+	Mat tmpblock = this->f.colRange(colStart, colStart+this->opts.getBlockSize()).rowRange(rowStart, rowStart + this->opts.getBlockSize());
 	block.copyTo(tmpblock);
 }
 

@@ -20,6 +20,7 @@ private:
 	std::map<int, cv::Mat> encoded;
 	cv::Size imsize;
 	cv::Mat img;
+	cv::Mat f;
 
 	void fillNthBlock(int, cv::Mat);
 	cv::Mat decodeBlock(cv::Mat, cv::Mat);

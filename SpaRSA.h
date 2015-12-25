@@ -13,13 +13,13 @@
 
 class SpaRSA {
 private:
-	const double eta = 1.1;
-	const double tau = 1.0;
-	const double sigma = 0.01;
-	const double tolP = 0.001;
-	const int M = 10;
+	const float eta = 1.5;
+	const float tau = 1.0;
+	const float sigma = 0.01;
+	const float tolP = 0.0001;
+	const int M = 100;
 	float alpha_t = 1.0;
-	const double alpha_min = 1.0, alpha_max = 10.0; // TODO: what values to initialize to?
+	const float alpha_min = 1.0, alpha_max = 1000.0; // TODO: what values to initialize to?
 	int t = 0;
 	std::deque<double> objectiveFunctionValues;
 	cv::Mat x_t, x_t_plus_1, x_t_minus_1;
@@ -27,16 +27,16 @@ private:
 	cv::Mat y, phi;
 
 	void updateAlpha();
-	void updateObjectiveValues(double);
+	void updateObjectiveValues(float);
 	void runAlgorithm();
 	void runOuterIteration();
 	void runInnerIteration();
 	bool checkAcceptanceCriterion(); // return true if acceptance criterion is met
 	bool checkStoppingCriterion(); // return true if stopping criterion is met
 	void solveSubproblem(); // solve x_{t+1} sub problem
-	double objectiveFunctionValue(cv::Mat);
+	float objectiveFunctionValue(cv::Mat);
 
-	double soft(double u, double a);
+	float soft(float u, float a);
 	cv::Mat del_f(cv::Mat x);
 public:
 	SpaRSA(cv::Mat y, cv::Mat phi);
