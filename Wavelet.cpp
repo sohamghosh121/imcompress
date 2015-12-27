@@ -129,28 +129,30 @@ Mat Wavelet::symconv2(Mat x, Mat vec, int rowCol){
 	Mat y = Mat::zeros(x.size(), CV_32FC1);
 	switch(rowCol){
 		case COL: {
-			Mat new_x = Mat(x.rows + 2 * length, x.cols, CV_32FC1);
-			Mat filtered_x = Mat(x.rows + 2 * length, x.cols, CV_32FC1);
+			Mat new_x = Mat(x.rows + 2 * half, x.cols, CV_32FC1);
+			Mat filtered_x = Mat(x.rows + 2 * half, x.cols, CV_32FC1);
 //			printf("x: (%d,%d)\tnew_x: (%d, %d)\n", x.rows, x.cols, new_x.rows, new_x.cols);
-			x.copyTo(new_x.rowRange(length, x.cols + length));
-			for (int i = 0; i < length; i++){
-				x.row(2*i + 1).copyTo(new_x.row(i));
-				x.row(x.rows-2).copyTo(new_x.row(i+x.rows));
+			x.copyTo(new_x.rowRange(half, x.cols + half));
+			for (int i = 0; i < half; i++){
+				printf("copy %d to %d\n", i + 1, half - i - 1);
+				x.row(i + 1).copyTo(new_x.row(half - i - 1));
+				printf("copy %d to %d\n", x.rows - i - 2, i + x.rows);
+				x.row(x.rows - i - 2).copyTo(new_x.row(i + x.rows));
 			}
 			cv::filter2D(new_x, filtered_x, -1, vec.t());
-			filtered_x.rowRange(length, x.cols + length).copyTo(y);
+			filtered_x.rowRange(half, x.rows + half).copyTo(y);
 		};
 		break;
 		case ROW:{
-			Mat new_x = Mat(x.rows, x.cols + 2 * length, CV_32FC1);
-			Mat filtered_x = Mat(x.rows + 2 * length, x.cols, CV_32FC1);
-			x.copyTo(new_x.colRange(length, x.cols + length));
-			for (int i = 0; i < length; i++){
-				x.col(2 * i + 1).copyTo(new_x.col(i));
-				x.col(x.cols-2).copyTo(new_x.col(i + x.cols)); // might be wrong
+			Mat new_x = Mat(x.rows, x.cols + 2 * half, CV_32FC1);
+			Mat filtered_x = Mat(x.rows + 2 * half, x.cols, CV_32FC1);
+			x.copyTo(new_x.colRange(half, x.cols + half));
+			for (int i = 0; i < half; i++){
+				x.col(i + 1).copyTo(new_x.col(half - i - 1));
+				x.col(x.cols - i - 2).copyTo(new_x.col(i + x.cols));
 			}
 			cv::filter2D(new_x, filtered_x, -1, vec);
-			filtered_x.colRange(length, x.cols + length).copyTo(y); // check dimensionality
+			filtered_x.colRange(half, x.cols + half).copyTo(y);
 		};
 		break;
 	}

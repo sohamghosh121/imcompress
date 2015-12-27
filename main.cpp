@@ -30,7 +30,6 @@ int main(int argc, char** argv) {
 	r.convertTo(r, CV_8UC1);
 //	printf("r (%d, %d) \n", r.rows, r.cols);
 	inputImage.convertTo(inputImage, CV_8UC1);
-	cv::imshow("Original Image", cv::imread("/Users/sohamghosh/photo.jpg"));
 	cv::imshow("Wavelet Reconstruction", r);
 //	Encoder e(inputImage);
 //	e.encodeImage();
