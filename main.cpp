@@ -16,13 +16,22 @@ double getPSNR(cv::Mat original, cv::Mat reconstructed){
 
 int main(int argc, char** argv) {
 	cv::Mat inputImage = cv::imread("/Users/sohamghosh/photo.jpg");
-	std::printf("size(%d, %d)\n", inputImage.rows, inputImage.cols);
+//	std::printf("size(%d, %d)\n", inputImage.rows, inputImage.cols);
 	cv::cvtColor(inputImage, inputImage, CV_RGB2GRAY, 0);
 	inputImage.convertTo(inputImage, CV_32FC1);
-	cv::Mat w = Wavelet(inputImage, Wavelet::DWT).getResult();
-//	w.convertTo(w, CV_8UC1);
-//	std::cout << w.rowRange(0, w.rows/2).colRange(0, w.cols/2);
-//	cv::imshow("Wavelet", w.rowRange(0, w.rows/2).colRange(0, w.cols/2));
+	cv::Mat d = Wavelet(inputImage, Wavelet::DWT).getResult();
+	cv::Mat r = Wavelet(d, Wavelet::IDWT).getResult();
+//	for (int i = 0; i < d.rows; i++){
+//		for (int j = 0; j < d.cols; j++){
+//			std::cout << d.at<float>(i, j) << " ";
+//		}
+//		std::cout << std::endl;
+//	}
+	r.convertTo(r, CV_8UC1);
+//	printf("r (%d, %d) \n", r.rows, r.cols);
+	inputImage.convertTo(inputImage, CV_8UC1);
+	cv::imshow("Original Image", cv::imread("/Users/sohamghosh/photo.jpg"));
+	cv::imshow("Wavelet Reconstruction", r);
 //	Encoder e(inputImage);
 //	e.encodeImage();
 //	printf("done encoding\n");
@@ -30,6 +39,6 @@ int main(int argc, char** argv) {
 //	d.decodeImage();
 //	std::cout << d.getDecodedImage();
 //	cv::imshow("Output", d.getDecodedImage());
-//	cv::waitKey(0);
+	cv::waitKey(0);
 	return 0;
 }
