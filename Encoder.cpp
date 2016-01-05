@@ -31,15 +31,11 @@ cv::Mat Encoder::getPhi(int m, int n){
 }
 
 Mat Encoder::getNthBlock(int n, Mat gob){ // this is 0 indexed
-//	assert(n >= 0 && n < (this->img.cols * this->img.rows/(opts.getBlockSize() * opts.getBlockSize())));
-//	printf("gob size: (%d, %d)", gob.rows, gob.cols);
-//	std::cout << "block: " << n << std::endl;
 	assert(n >= 0 && n < opts.getM() * opts.getM());
 	return gob.rowRange(n*opts.getBlockSize()*opts.getBlockSize(), (n+1)*opts.getBlockSize()*opts.getBlockSize()).clone();
 }
 
 Mat Encoder::getGOB(int n){
-//	std::cout << "GOB: " << n << std::endl;
 	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(opts.getBlockSize(), 2) * pow(opts.getM(), 2))));
 	int rowStart, colStart;
 	int nc = this->f.cols / (opts.getBlockSize() * opts.getM());
@@ -50,16 +46,9 @@ Mat Encoder::getGOB(int n){
 }
 
 Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
-//	std::cout << x;
 	Mat res = Mat(phi.rows, 1, CV_32FC1);
 	Mat zero = Mat::zeros(phi.rows, 1, CV_32FC1);
-//	printf("res.size: (%d, %d)\tzero.size: (%d, %d)\tx.size: (%d, %d)\tphi.size: (%d, %d)\n", res.rows, res.cols, zero.rows, zero.cols, x.rows, x.cols, phi.rows, phi.cols);
-
 	gemm(phi, x, 1.0, noArray(), 0.0, res);
-//	std::cout << phi << "----------############--------\n";
-//	std::cout << x << "-----############------------\n";
-//	std::cout << res << "-----#############---------\n";
-//	assert(false);
 	return res;
 }
 
@@ -74,11 +63,8 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 void Encoder::encodeImage(){
 	assert(img.cols == img.rows);
 	int numGOBs = this->img.cols * this->img.rows/(pow(opts.getBlockSize(), 2) * pow(opts.getM(), 2));
-	std::cout << "numGOBs: " << numGOBs << std::endl;
 	Mat y;
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
-	imshow("Wavelet", this->f);
-//	imshow("Check inverse", Wavelet(this->f, Wavelet::IDWT).getResult());
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
 		for (int j = 0; j < pow(opts.getM(), 2); j++){
@@ -88,11 +74,9 @@ void Encoder::encodeImage(){
 			} else {
 				y = encodeNonKeyBlock(block);
 			}
-			std::cout << i*pow(opts.getM(),2) +j << " ";
 			encoded[i*pow(opts.getM(),2) +j] = y;
 		}
 	}
-	std::cout << std::endl;
 }
 
 cv::Mat Encoder::getKeyPhi(){

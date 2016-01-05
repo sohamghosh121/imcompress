@@ -134,13 +134,11 @@ Mat Wavelet::symconv2(Mat x, Mat vec, int rowCol){
 //			printf("x: (%d,%d)\tnew_x: (%d, %d)\n", x.rows, x.cols, new_x.rows, new_x.cols);
 			x.copyTo(new_x.rowRange(half, x.cols + half));
 			for (int i = 0; i < half; i++){
-				printf("copy %d to %d\n", i + 1, half - i - 1);
 				x.row(i + 1).copyTo(new_x.row(half - i - 1));
-				printf("copy %d to %d\n", x.rows - i - 2, i + x.rows);
 				x.row(x.rows - i - 2).copyTo(new_x.row(i + x.rows));
 			}
-			cv::filter2D(new_x, filtered_x, -1, vec.t());
-			filtered_x.rowRange(half, x.rows + half).copyTo(y);
+				cv::filter2D(new_x, filtered_x, -1, vec.t());
+				filtered_x.rowRange(half, x.rows + half).copyTo(y);
 		};
 		break;
 		case ROW:{

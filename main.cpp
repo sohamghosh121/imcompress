@@ -15,29 +15,18 @@ double getPSNR(cv::Mat original, cv::Mat reconstructed){
 }
 
 int main(int argc, char** argv) {
-	cv::Mat inputImage = cv::imread("/Users/sohamghosh/photo.jpg");
-//	std::printf("size(%d, %d)\n", inputImage.rows, inputImage.cols);
-	cv::cvtColor(inputImage, inputImage, CV_RGB2GRAY, 0);
-	inputImage.convertTo(inputImage, CV_32FC1);
-	cv::Mat d = Wavelet(inputImage, Wavelet::DWT).getResult();
-	cv::Mat r = Wavelet(d, Wavelet::IDWT).getResult();
-//	for (int i = 0; i < d.rows; i++){
-//		for (int j = 0; j < d.cols; j++){
-//			std::cout << d.at<float>(i, j) << " ";
-//		}
-//		std::cout << std::endl;
-//	}
-	r.convertTo(r, CV_8UC1);
-//	printf("r (%d, %d) \n", r.rows, r.cols);
-	inputImage.convertTo(inputImage, CV_8UC1);
-	cv::imshow("Wavelet Reconstruction", r);
-//	Encoder e(inputImage);
-//	e.encodeImage();
-//	printf("done encoding\n");
-//	Decoder d(inputImage.rows, inputImage.cols, e.getKeyPhi(), e.getnonkeyPhi(), e.getEncodedValues());
-//	d.decodeImage();
-//	std::cout << d.getDecodedImage();
-//	cv::imshow("Output", d.getDecodedImage());
+	cv::Mat inputImage = cv::imread("/Users/sohamghosh/src/imcompress/photos/photo.jpg");
+	clock_t startTime = clock();
+	Encoder e(inputImage);
+	std::cout << "Encoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
+	e.encodeImage();
+	Decoder d(inputImage.rows, inputImage.cols, e.getKeyPhi(), e.getnonkeyPhi(), e.getEncodedValues());
+	startTime = clock();
+	d.decodeImage();
+	std::cout << "Decoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
+
+	cv::imshow("Output", d.getDecodedImage());
+	cv::imwrite("/Users/sohamghosh/src/imcompress/photos/output.jpg", d.getDecodedImage());
 	cv::waitKey(0);
 	return 0;
 }
