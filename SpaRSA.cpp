@@ -16,52 +16,49 @@ SpaRSA::SpaRSA(Mat y, Mat phi) {
 
 void SpaRSA::runAlgorithm(){
 	t = 0;
-	x_t = Mat(Size(1,phi.cols), CV_32FC1); // initialises to zero (lines 417-432 SpaRSA.m)
-	x_t_plus_1 = Mat(Size(1,phi.cols), CV_32FC1);
-	x_t_minus_1 = Mat(Size(1,phi.cols), CV_32FC1);
+	x_t = Mat::zeros(Size(1,phi.cols), CV_32FC1); // initialises to zero (lines 417-432 SpaRSA.m)
+//	std::cout << "Initial objective: " << objectiveFunctionValue(x_t) << "\n";
+	x_t_plus_1 = Mat::zeros(Size(1,phi.cols), CV_32FC1);
+	x_t_minus_1 = Mat::zeros(Size(1,phi.cols), CV_32FC1);
 	runOuterIteration();
 }
 
 void SpaRSA::runOuterIteration(){
 	do {
 		runInnerIteration();
-		chooseAlpha();
 		x_t.copyTo(x_t_minus_1);
 		x_t_plus_1.copyTo(x_t);
+//		std::cout << "t: " << t << "\tobj: " << objectiveFunctionValue(x_t) << "\talpha: " << alpha_t << "\t";
 		t++;
 		updateObjectiveValues(objectiveFunctionValue(x_t));
+		chooseAlpha();
 	}while(!checkStoppingCriterion());
 }
 
 void SpaRSA::runInnerIteration(){
 	do {
 		solveSubproblem();
+		if (checkAcceptanceCriterion())
+			break;
 		updateAlpha();
-	} while(!checkAcceptanceCriterion());
+	} while(true);
 }
 
 void SpaRSA::chooseAlpha(){
-	alpha_t *= this->alphaFactor;
-//	if (t == 0){
-////		alpha_t = ((double)rand() / RAND_MAX) * (alpha_max - alpha_min) + alpha_min;
-//	} else {
-//
-//		Mat s_t;
-//		subtract(x_t, x_t_minus_1, s_t);
-//		Mat r_t;
-//		subtract(del_f(x_t), del_f(x_t_minus_1), r_t);
-//		Mat num(1,1,CV_32FC1), den(1,1,CV_32FC1);
-////		std::cout << s_t;
-////		std::cout << r_t;
-//		cv::gemm(s_t.t(), r_t, 1.0, noArray(), 0.0, num);
-//		cv::gemm(s_t.t(), s_t, 1.0, noArray(), 0.0, den);
-////		std :: cout<< t << "\t";
-//		std::cout << num.at<double>(0,0)/den.at<double>(0,0) << "\n";
-////		alpha_t = 1.0;
-//	}
+//	alpha_t *= this->alphaFactor;
+
+		Mat diff;
+		subtract(x_t, x_t_minus_1, diff);
+		double dd = pow(norm(diff, NORM_L2), 2);
+		Mat phi_diff;
+		gemm(phi, diff, 1.0, noArray(), 0.0, phi_diff);
+		double dGd = pow(norm(phi_diff, NORM_L2), 2);
+//		std::cout << "dd: " << dd << "\tdGd: " << dGd;
+		alpha_t = fmin(this->alpha_max, fmax(this->alpha_min, dGd/dd));
 }
 
 void SpaRSA::updateAlpha(){
+//	std::cout << "\n(t=" << t << ") obj: " << objectiveFunctionValue(x_t_plus_1) << " not accepted, raising alpha to " << alpha_t * eta << "\n";
 	alpha_t = eta * alpha_t;
 }
 
@@ -80,7 +77,7 @@ bool SpaRSA::checkAcceptanceCriterion(){
 	if (isnan(*res))
 		return false;
 	double maxValue = *res;
-	if (currObj <= maxValue - (sigma/2 * alpha_t * norm(x_t_plus_1 - x_t, 2))){
+	if (currObj <= maxValue - (sigma/2 * alpha_t * norm(x_t_plus_1 - x_t, NORM_L2))){
 		return true;
 	} else {
 		return false;
@@ -88,43 +85,34 @@ bool SpaRSA::checkAcceptanceCriterion(){
 }
 
 bool SpaRSA::checkStoppingCriterion(){ // first using simple termination criteria in equation 26
-	if (t > minIter) {
-		if (t > maxIter){
-			return true;
-		}
-		if (norm(x_t - x_t_minus_1, 2)/norm(x_t, 2) <= tolP){
-			return true;
-		} else
-			return false;
-	} else {
-		return false;
+	if (t > maxIter){
+		return true;
 	}
+//	std::cout << "\t rel_change: " << norm(x_t - x_t_minus_1, NORM_L2)/norm(x_t, NORM_L2) << "\n";
+	if (norm(x_t - x_t_minus_1, NORM_L2)/norm(x_t, NORM_L2) <= tolP){
+		return true;
+	} else
+		return false;
 }
 
 float SpaRSA::objectiveFunctionValue(Mat x){
 	Mat f;
 	gemm(phi, x, -1.0, y, 1.0, f);
-	double o = norm(f, 2) + tau * norm(x, 1); // l2 - l1
+	double o = 0.5 * norm(f, NORM_L2) + tau * norm(x, NORM_L1); // l2 - l1
 	return o;
 }
 
 float SpaRSA::soft(float u, float a){
-	if (u < 0){
-		return -1 * fmax(abs(u) - a, 0);
-	} else {
-		return 1 * fmax(abs(u) - a, 0);
-	}
+	float y = fmax(abs(u) - a, 0);
+	return u * y/(y + a);
 }
 
 Mat SpaRSA::del_f(Mat x){
-	// del_f computation is correct
-	Mat At_A;
-	Mat firstTerm;
-	Mat del_f;
-	gemm(phi.t(), phi, 1.0, noArray(), 0.0, At_A);
-	gemm(At_A, x, 2.0, noArray(), 0.0, firstTerm);
-	gemm(phi.t(), y, -2.0, firstTerm, 1.0, del_f);
-	return del_f;
+	Mat resid;
+	gemm(phi, x, 1.0, y, -1.0, resid);
+	Mat grad_q;
+	gemm(phi.t(), resid, 1.0, noArray(), 0.0, grad_q);
+	return grad_q;
 }
 
 void SpaRSA::solveSubproblem(){
@@ -132,6 +120,7 @@ void SpaRSA::solveSubproblem(){
 	for (int i = 0; i < u.rows; i++){
 		x_t_plus_1.at<float>(i,0) = soft(u.at<float>(i,0), tau/alpha_t); // equation 12
 	}
+//	std::cout << "\n" << x_t_plus_1.t() << "\n";
 }
 
 Mat SpaRSA::reconstructed(){

@@ -29,16 +29,16 @@ void Wavelet::encode(){
 	for (int i = 0; i < level; i++){
 		// declarations
 //		printf("level: %d\n", i);
-		Mat temp = Mat(in.size(), CV_32FC1);
-		Mat temp_downsample = Mat(temp.rows/2, temp.cols, CV_32FC1);
-		Mat ll = Mat(temp_downsample.size(), CV_32FC1);
-		Mat ll_downsample = Mat(ll.rows, ll.cols/2, CV_32FC1);
-		Mat lh = Mat(temp_downsample.size(), CV_32FC1);
-		Mat lh_downsample = Mat(lh.rows, lh.cols/2, CV_32FC1);
-		Mat hl = Mat(temp_downsample.size(), CV_32FC1);
-		Mat hl_downsample = Mat(hl.rows, hl.cols/2, CV_32FC1);
-		Mat hh = Mat(temp_downsample.size(), CV_32FC1);
-		Mat hh_downsample = Mat(hh.rows, hh.cols/2, CV_32FC1);
+		Mat temp = Mat::zeros(in.size(), CV_32FC1);
+		Mat temp_downsample = Mat::zeros(temp.rows/2, temp.cols, CV_32FC1);
+		Mat ll = Mat::zeros(temp_downsample.size(), CV_32FC1);
+		Mat ll_downsample = Mat::zeros(ll.rows, ll.cols/2, CV_32FC1);
+		Mat lh = Mat::zeros(temp_downsample.size(), CV_32FC1);
+		Mat lh_downsample = Mat::zeros(lh.rows, lh.cols/2, CV_32FC1);
+		Mat hl = Mat::zeros(temp_downsample.size(), CV_32FC1);
+		Mat hl_downsample = Mat::zeros(hl.rows, hl.cols/2, CV_32FC1);
+		Mat hh = Mat::zeros(temp_downsample.size(), CV_32FC1);
+		Mat hh_downsample = Mat::zeros(hh.rows, hh.cols/2, CV_32FC1);
 		//
 		temp = symconv2(in, hp, COL);
 		downsample(temp, temp_downsample, ROW, 1);
@@ -75,10 +75,10 @@ void Wavelet::decode(){
 
 //		printf("in (%d, %d) \tsLL (%d, %d)\tsConstructed (%d, %d)\tsHH (%d, %d)\n", in.rows, in.cols, sLL_dim1, sLL_dim2, sConstructed_dim1, sConstructed_dim2, sHH_dim1, sHH_dim2);
 
-		Mat ll = Mat(sLL_dim1, sLL_dim2, CV_32FC1);
-		Mat lh = Mat(sHH_dim1, sLL_dim2, CV_32FC1);
-		Mat hl = Mat(sLL_dim1, sHH_dim2, CV_32FC1);
-		Mat hh = Mat(sHH_dim1, sHH_dim2, CV_32FC1);
+		Mat ll = Mat::zeros(sLL_dim1, sLL_dim2, CV_32FC1);
+		Mat lh = Mat::zeros(sHH_dim1, sLL_dim2, CV_32FC1);
+		Mat hl = Mat::zeros(sLL_dim1, sHH_dim2, CV_32FC1);
+		Mat hh = Mat::zeros(sHH_dim1, sHH_dim2, CV_32FC1);
 
 
 		out.rowRange(0, sLL_dim1).colRange(0, sLL_dim2).copyTo(ll);
@@ -129,8 +129,8 @@ Mat Wavelet::symconv2(Mat x, Mat vec, int rowCol){
 	Mat y = Mat::zeros(x.size(), CV_32FC1);
 	switch(rowCol){
 		case COL: {
-			Mat new_x = Mat(x.rows + 2 * half, x.cols, CV_32FC1);
-			Mat filtered_x = Mat(x.rows + 2 * half, x.cols, CV_32FC1);
+			Mat new_x = Mat::zeros(x.rows + 2 * half, x.cols, CV_32FC1);
+			Mat filtered_x = Mat::zeros(x.rows + 2 * half, x.cols, CV_32FC1);
 //			printf("x: (%d,%d)\tnew_x: (%d, %d)\n", x.rows, x.cols, new_x.rows, new_x.cols);
 			x.copyTo(new_x.rowRange(half, x.cols + half));
 			for (int i = 0; i < half; i++){
@@ -142,8 +142,8 @@ Mat Wavelet::symconv2(Mat x, Mat vec, int rowCol){
 		};
 		break;
 		case ROW:{
-			Mat new_x = Mat(x.rows, x.cols + 2 * half, CV_32FC1);
-			Mat filtered_x = Mat(x.rows + 2 * half, x.cols, CV_32FC1);
+			Mat new_x = Mat::zeros(x.rows, x.cols + 2 * half, CV_32FC1);
+			Mat filtered_x = Mat::zeros(x.rows + 2 * half, x.cols, CV_32FC1);
 			x.copyTo(new_x.colRange(half, x.cols + half));
 			for (int i = 0; i < half; i++){
 				x.col(i + 1).copyTo(new_x.col(half - i - 1));

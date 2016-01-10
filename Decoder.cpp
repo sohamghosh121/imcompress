@@ -24,6 +24,7 @@ Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> e
 
 void Decoder::decodeImage(){
 	int i = 0;
+	;
 	for (i = 0; i < this->encoded.size(); i++){
 		if (i % (opts.getM() * opts.getM()) == 0) { // key block
 			Mat block = decodeBlock(this->encoded[i], this->keyPhi);
@@ -31,13 +32,14 @@ void Decoder::decodeImage(){
 			fillNthBlock(i, block);
 		} else {
 			Mat block = decodeBlock(this->encoded[i], this->nonkeyPhi);
+
 			block = block.reshape(1, opts.getBlockSize());
 			fillNthBlock(i, block);
 		}
+		std::cout << "block " << i << "\n";
 	}
 	this->img = Wavelet(f, Wavelet::IDWT).getResult();
 	this->img.convertTo(this->img, CV_8UC1);
-
 }
 
 Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){

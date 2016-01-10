@@ -13,7 +13,7 @@
 using namespace cv;
 
 Encoder::Encoder(Mat img) {
-	cv::cvtColor(img, this->img, CV_RGB2GRAY, 0);
+	this->img = img;
 	this->img.convertTo(this->img, CV_32FC1);
 	this->keyPhi = getPhi(opts.getMk());
 	this->nonkeyPhi = getPhi(opts.getMw());
@@ -26,7 +26,7 @@ cv::Mat Encoder::getPhi(double measurementRate){  // measurement rate = Mr/B^2
 }
 
 cv::Mat Encoder::getPhi(int m, int n){
-	SBHE h = SBHE(m, n, n / 16, 11);
+	SBHE h = SBHE(m, n, n / 8, 11);
 	return h.getSBHEmat();
 }
 

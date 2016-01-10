@@ -15,14 +15,14 @@ class SpaRSA {
 private:
 	const float eta = 2.0;
 	const float alphaFactor = 0.8;
-	const float tau = 1.0;
-	const float sigma = 0.01;
-	const float tolP = 0.00001;
+	const float tau = 0.05;
+	const float sigma = 0.0001;
+	const float tolP = 0.001;
 	const size_t maxIter = 1000;
 	const size_t minIter = 5;
 	const int M = 5;
 	float alpha_t = 1.0;
-	const float alpha_min = 0.1, alpha_max = 1000.0; // TODO: what values to initialize to?
+	const float alpha_min = 0.00000001, alpha_max = 10000000.0; // TODO: what values to initialize to?
 	int t = 0;
 	std::deque<double> objectiveFunctionValues;
 	cv::Mat x_t, x_t_plus_1, x_t_minus_1;

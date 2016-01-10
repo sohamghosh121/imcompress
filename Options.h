@@ -10,8 +10,8 @@
 
 class Options {
 private:
-	double Mk = 0.4;
-	double Mw = 0.2;
+	double Mk = 0.8;
+	double Mw = 0.6;
 //	double C = 1.0;
 	int blockSize = 8;
 	int M = 4;
