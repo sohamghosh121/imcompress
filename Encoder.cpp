@@ -39,8 +39,8 @@ Mat Encoder::getGOB(int n){
 	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(opts.getBlockSize(), 2) * pow(opts.getM(), 2))));
 	int rowStart, colStart;
 	int nc = this->f.cols / (opts.getBlockSize() * opts.getM());
-	colStart = (n % nc) * opts.getBlockSize();
-	rowStart = (n / nc) *opts.getBlockSize();
+	colStart = (n % nc) * opts.getBlockSize() * opts.getM();
+	rowStart = (n / nc) *opts.getBlockSize() * opts.getM();
 	Mat x = Mat(this->f.colRange(colStart, colStart+opts.getBlockSize() * opts.getM()).rowRange(rowStart, rowStart+opts.getBlockSize() * opts.getM()));
 	return x.clone().reshape(1, opts.getBlockSize()*opts.getBlockSize()*opts.getM()*opts.getM());
 }

@@ -9,12 +9,23 @@
 # include <stddef.h>
 using namespace cv;
 
+void sparsify(Mat& wav){
+	for (int i = 0; i < wav.rows; i ++){
+		for (int j = 0; j < wav.cols; j++){
+			if (wav.at<float>(i, j) < 0.2){
+				wav.at<float>(i, j) = 0.0;
+			}
+		}
+	}
+}
+
 Wavelet::Wavelet(Mat img, int type) {
 	this->in = img;
 	this->out = Mat(img.size(), CV_32FC1);
 	switch(type){
 	case DWT:
 		encode();
+		sparsify(out);
 //		printf("dwt\n");
 		break;
 	case IDWT:
@@ -23,6 +34,8 @@ Wavelet::Wavelet(Mat img, int type) {
 		break;
 	}
 }
+
+
 
 
 void Wavelet::encode(){

@@ -24,7 +24,6 @@ Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> e
 
 void Decoder::decodeImage(){
 	int i = 0;
-	;
 	for (i = 0; i < this->encoded.size(); i++){
 		if (i % (opts.getM() * opts.getM()) == 0) { // key block
 			Mat block = decodeBlock(this->encoded[i], this->keyPhi);
@@ -36,9 +35,14 @@ void Decoder::decodeImage(){
 			block = block.reshape(1, opts.getBlockSize());
 			fillNthBlock(i, block);
 		}
-		std::cout << "block " << i << "\n";
 	}
 	this->img = Wavelet(f, Wavelet::IDWT).getResult();
+	Mat f_;
+	std::cout << f;
+	f.copyTo(f_);
+	f_.convertTo(f_, CV_8UC1);
+	imshow("hi", f_);
+	waitKey(0);
 	this->img.convertTo(this->img, CV_8UC1);
 }
 
@@ -50,11 +54,15 @@ Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){
 
 void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed
 	assert(n >= 0 && n < (this->f.cols * this->f.rows)/(this->opts.getBlockSize() * this->opts.getBlockSize()));
-	int rowStart, colStart;
-	int nc = this->f.cols / this->opts.getBlockSize();
-	int nr = this->f.rows / this->opts.getBlockSize();
-	colStart = (n % nc) * this->opts.getBlockSize();
-	rowStart = (n / nc) * this->opts.getBlockSize();
+	int whichGOB = int(double(n)/pow(opts.getM(),2));
+	int blockOffset = n % int(pow(opts.getM(), 2));
+
+	int n_gob_y = this->f.cols / (opts.getBlockSize() * opts.getM());
+	int gob_colStart = (whichGOB % n_gob_y) * (opts.getBlockSize() * opts.getM());
+	int gob_rowStart = int(whichGOB / n_gob_y) * (opts.getBlockSize() * opts.getM());
+	int rowStart = gob_rowStart + (blockOffset % opts.getM()) * opts.getBlockSize();
+	int colStart = gob_colStart + int(blockOffset / opts.getM()) * opts.getBlockSize();
+//	printf("block %d: (%d,%d)\t\t\t gob_rowStart=%d  gob_colStart=%d  \n", n, rowStart, colStart, gob_rowStart, gob_colStart);
 	Mat tmpblock = this->f.colRange(colStart, colStart+this->opts.getBlockSize()).rowRange(rowStart, rowStart + this->opts.getBlockSize());
 	assert(tmpblock.rows == block.rows && tmpblock.cols == block.cols);
 	block.copyTo(tmpblock);

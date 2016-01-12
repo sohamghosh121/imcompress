@@ -36,7 +36,9 @@ void SpaRSA::runOuterIteration(){
 }
 
 void SpaRSA::runInnerIteration(){
+	itersThisCycle = 0;
 	do {
+		itersThisCycle++;
 		solveSubproblem();
 		if (checkAcceptanceCriterion())
 			break;
@@ -69,7 +71,7 @@ void SpaRSA::updateObjectiveValues(float val){
 }
 
 bool SpaRSA::checkAcceptanceCriterion(){
-	if (t==0)
+	if (t==0 || itersThisCycle > maxItersPerCycle)
 		return true;
 	double currObj;
 	currObj = objectiveFunctionValue(x_t_plus_1);
