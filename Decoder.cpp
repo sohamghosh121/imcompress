@@ -37,12 +37,6 @@ void Decoder::decodeImage(){
 		}
 	}
 	this->img = Wavelet(f, Wavelet::IDWT).getResult();
-	Mat f_;
-	std::cout << f;
-	f.copyTo(f_);
-	f_.convertTo(f_, CV_8UC1);
-	imshow("hi", f_);
-	waitKey(0);
 	this->img.convertTo(this->img, CV_8UC1);
 }
 

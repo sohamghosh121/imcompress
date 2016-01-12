@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 	startTime = clock();
 	d.decodeImage();
 	std::cout << "Decoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
-
+	std::cout << "PSNR: " << cv::PSNR(inputImage, d.getDecodedImage());
 	cv::imshow("Output", d.getDecodedImage());
 	cv::imwrite("/Users/sohamghosh/src/imcompress/photos/output.jpg", d.getDecodedImage());
 	cv::waitKey(0);

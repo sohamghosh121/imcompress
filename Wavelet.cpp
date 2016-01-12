@@ -6,18 +6,11 @@
  */
 
 #include "Wavelet.h"
+#include "blitzwave/WaveletDecomp.h"
+#include <blitz/array.h>
 # include <stddef.h>
 using namespace cv;
 
-void sparsify(Mat& wav){
-	for (int i = 0; i < wav.rows; i ++){
-		for (int j = 0; j < wav.cols; j++){
-			if (wav.at<float>(i, j) < 0.2){
-				wav.at<float>(i, j) = 0.0;
-			}
-		}
-	}
-}
 
 Wavelet::Wavelet(Mat img, int type) {
 	this->in = img;
@@ -25,7 +18,6 @@ Wavelet::Wavelet(Mat img, int type) {
 	switch(type){
 	case DWT:
 		encode();
-		sparsify(out);
 //		printf("dwt\n");
 		break;
 	case IDWT:
@@ -36,177 +28,35 @@ Wavelet::Wavelet(Mat img, int type) {
 }
 
 
-
+Mat naiveBlitzToCvMat(blitz::Array<float, 2> a){
+	int i, j;
+	Mat b = Mat(a.rows(), a.cols(), CV_32FC1);
+	for (i=0; i< a.rows(); i++){
+		for(j=0; j<a.cols(); j++){
+			b.at<float>(i,j) = a(i, j);
+		}
+	}
+	return b;
+}
 
 void Wavelet::encode(){
-	for (int i = 0; i < level; i++){
-		// declarations
-//		printf("level: %d\n", i);
-		Mat temp = Mat::zeros(in.size(), CV_32FC1);
-		Mat temp_downsample = Mat::zeros(temp.rows/2, temp.cols, CV_32FC1);
-		Mat ll = Mat::zeros(temp_downsample.size(), CV_32FC1);
-		Mat ll_downsample = Mat::zeros(ll.rows, ll.cols/2, CV_32FC1);
-		Mat lh = Mat::zeros(temp_downsample.size(), CV_32FC1);
-		Mat lh_downsample = Mat::zeros(lh.rows, lh.cols/2, CV_32FC1);
-		Mat hl = Mat::zeros(temp_downsample.size(), CV_32FC1);
-		Mat hl_downsample = Mat::zeros(hl.rows, hl.cols/2, CV_32FC1);
-		Mat hh = Mat::zeros(temp_downsample.size(), CV_32FC1);
-		Mat hh_downsample = Mat::zeros(hh.rows, hh.cols/2, CV_32FC1);
-		//
-		temp = symconv2(in, hp, COL);
-		downsample(temp, temp_downsample, ROW, 1);
-		hh = symconv2(temp_downsample, hp, ROW);
-		downsample(hh, hh_downsample, COL, 1);
-		lh = symconv2(temp_downsample, lp, ROW);
-		downsample(lh, lh_downsample, COL, 0);
-
-		temp = symconv2(in, lp, COL);
-		downsample(temp, temp_downsample, ROW, 0);
-		hl = symconv2(temp_downsample, hp, ROW);
-		downsample(hl, hl_downsample, COL, 1);
-		ll = symconv2(temp_downsample, lp, ROW);
-		downsample(ll, ll_downsample, COL, 0);
-
-//		printf("ll (%d,%d), lh (%d,%d), hl (%d,%d), hh (%d,%d)\n", ll_downsample.rows, ll_downsample.cols, lh_downsample.rows, lh_downsample.cols, hl_downsample.rows, hl_downsample.cols, hh_downsample.rows, hh_downsample.cols);
-		ll_downsample.copyTo(out.rowRange(0, in.rows/2).colRange(0, in.rows/2));
-		lh_downsample.copyTo(out.rowRange(in.rows/2, in.rows).colRange(0, in.rows/2));
-		hl_downsample.copyTo(out.rowRange(0, in.rows/2).colRange(in.rows/2, in.rows));
-		hh_downsample.copyTo(out.rowRange(in.rows/2, in.rows).colRange(in.rows/2, in.rows));
-		in = ll_downsample;
-	}
+	blitz::Array<float,2> tmp(   (float*)(this->in.data),
+	                    blitz::shape(this->in.rows,
+	                    this->in.cols),
+	                    blitz::neverDeleteData);
+	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, 2);
+	decomp.apply(tmp);
+	out = naiveBlitzToCvMat(tmp);
 }
 
 void Wavelet::decode(){
-	in.copyTo(out);
-	for (int i = 0; i < level; i++){
-		int sLL_dim1 = ceil(double(in.rows)/pow(2, level - i));
-		int sLL_dim2 = ceil(double(in.cols)/pow(2, level - i));
-		int sConstructed_dim1 = ceil(double(in.rows)/pow(2, level - i - 1));
-		int sConstructed_dim2 = ceil(double(in.cols)/pow(2, level - i - 1));
-		int sHH_dim1 = sConstructed_dim1 - sLL_dim1;
-		int sHH_dim2 = sConstructed_dim2 - sLL_dim2;
-
-//		printf("in (%d, %d) \tsLL (%d, %d)\tsConstructed (%d, %d)\tsHH (%d, %d)\n", in.rows, in.cols, sLL_dim1, sLL_dim2, sConstructed_dim1, sConstructed_dim2, sHH_dim1, sHH_dim2);
-
-		Mat ll = Mat::zeros(sLL_dim1, sLL_dim2, CV_32FC1);
-		Mat lh = Mat::zeros(sHH_dim1, sLL_dim2, CV_32FC1);
-		Mat hl = Mat::zeros(sLL_dim1, sHH_dim2, CV_32FC1);
-		Mat hh = Mat::zeros(sHH_dim1, sHH_dim2, CV_32FC1);
-
-
-		out.rowRange(0, sLL_dim1).colRange(0, sLL_dim2).copyTo(ll);
-		out.rowRange(0, sLL_dim1).colRange(sLL_dim2, sLL_dim2 + sHH_dim2).copyTo(hl);
-		out.rowRange(sLL_dim1, sLL_dim1 + sHH_dim1).colRange(0, sLL_dim2).copyTo(lh);
-		out.rowRange(sLL_dim1, sLL_dim1 + sHH_dim1).colRange(sLL_dim2, sLL_dim2 + sHH_dim2).copyTo(hh);
-
-		Mat temp = Mat::zeros(sLL_dim1, sConstructed_dim2, CV_32FC1);
-		upsample(ll, temp, COL, 0);
-		ll = symconv2(temp, lpr, ROW);
-
-		temp = Mat::zeros(sLL_dim1, sConstructed_dim2, CV_32FC1);
-		upsample(hl, temp, COL, 1);
-		hl = symconv2(temp, hpr, ROW);
-
-		temp = Mat::zeros(sConstructed_dim1, sConstructed_dim2, CV_32FC1);
-		Mat ll_plus_hl;
-		add(ll, hl, ll_plus_hl);
-		upsample(ll_plus_hl, temp, ROW, 0);
-		Mat l = symconv2(temp, lpr, COL);
-
-
-		temp = Mat::zeros(sHH_dim1, sConstructed_dim2, CV_32FC1);
-		upsample(lh, temp, COL, 0);
-		lh = symconv2(temp, lpr, ROW);
-
-		temp = Mat::zeros(sHH_dim1, sConstructed_dim2, CV_32FC1);
-		upsample(hh, temp, COL, 1);
-		hh = symconv2(temp, hpr, ROW);
-
-		temp = Mat::zeros(sConstructed_dim1, sConstructed_dim2, CV_32FC1);
-		Mat lh_plus_hh;
-		add(lh, hh, lh_plus_hh);
-		upsample(lh_plus_hh, temp, ROW, 1);
-		Mat h = symconv2(temp, hpr, COL);
-
-		Mat l_plus_h;
-		add(l, h, l_plus_h);
-		l_plus_h.copyTo(out.rowRange(0, sConstructed_dim1).colRange(0, sConstructed_dim2));
-	}
-
-}
-
-Mat Wavelet::symconv2(Mat x, Mat vec, int rowCol){
-	int length = vec.cols;
-//	printf("length: %d\n", length);
-	int half = (length - 1)/2;
-	Mat y = Mat::zeros(x.size(), CV_32FC1);
-	switch(rowCol){
-		case COL: {
-			Mat new_x = Mat::zeros(x.rows + 2 * half, x.cols, CV_32FC1);
-			Mat filtered_x = Mat::zeros(x.rows + 2 * half, x.cols, CV_32FC1);
-//			printf("x: (%d,%d)\tnew_x: (%d, %d)\n", x.rows, x.cols, new_x.rows, new_x.cols);
-			x.copyTo(new_x.rowRange(half, x.cols + half));
-			for (int i = 0; i < half; i++){
-				x.row(i + 1).copyTo(new_x.row(half - i - 1));
-				x.row(x.rows - i - 2).copyTo(new_x.row(i + x.rows));
-			}
-				cv::filter2D(new_x, filtered_x, -1, vec.t());
-				filtered_x.rowRange(half, x.rows + half).copyTo(y);
-		};
-		break;
-		case ROW:{
-			Mat new_x = Mat::zeros(x.rows, x.cols + 2 * half, CV_32FC1);
-			Mat filtered_x = Mat::zeros(x.rows + 2 * half, x.cols, CV_32FC1);
-			x.copyTo(new_x.colRange(half, x.cols + half));
-			for (int i = 0; i < half; i++){
-				x.col(i + 1).copyTo(new_x.col(half - i - 1));
-				x.col(x.cols - i - 2).copyTo(new_x.col(i + x.cols));
-			}
-			cv::filter2D(new_x, filtered_x, -1, vec);
-			filtered_x.colRange(half, x.cols + half).copyTo(y);
-		};
-		break;
-	}
-	return y;
-}
-
-void Wavelet::downsample(Mat& src, Mat& dest, int rowCol, int start){
-	switch(rowCol){
-	case ROW: {
-		assert(dest.rows == src.rows/2);
-		for (int i = 0; i < dest.rows; i++){
-			src.row(i * 2 + start).copyTo(dest.row(i));
-		}
-	};
-	break;
-	case COL: {
-		assert(dest.cols == src.cols/2);
-		for (int i = 0; i < dest.cols; i++){
-			src.col(i * 2 + start).copyTo(dest.col(i));
-		}
-	};
-	break;
-	}
-}
-
-void Wavelet::upsample(Mat& src, Mat& dest, int rowCol, int start){
-//	printf("src (%d, %d) \t des (%d, %d)", src.rows, src.cols, dest.rows, dest.cols);
-	switch(rowCol){
-	case ROW: {
-		assert(src.rows == dest.rows/2);
-		for (int i = 0; i < src.rows; i++){
-			src.row(i).copyTo(dest.row(i * 2 + start));
-		}
-	};
-	break;
-	case COL: {
-		assert(src.cols == dest.cols/2);
-		for (int i = 0; i < src.cols; i++){
-			src.col(i).copyTo(dest.col(i * 2 + start));
-		}
-	};
-	break;
-	}
+	blitz::Array<float,2> tmp(   (float*)(this->in.data),
+		                    blitz::shape(this->in.rows,
+		                    this->in.cols),
+		                    blitz::neverDeleteData);
+	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, 2);
+	decomp.applyInv(tmp);
+	out = naiveBlitzToCvMat(tmp);
 }
 
 Mat Wavelet::getResult(){
