@@ -8,57 +8,30 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
+#include <opencv2/opencv.hpp>
+
 class Options {
 private:
-	double Mk = 0.8;
-	double Mw = 0.6;
-//	double C = 1.0;
-	int blockSize = 8;
-	int M = 4;
-
-public:
 	Options();
-	virtual ~Options();
+	~Options();
+public:
+	static float Mk;
+	static float Mw;
+	static int blockSize;
+	static int M;
+	static int B;
+	static int A;
+	static float eta;
+	static float tau;
+	static float sigma;
+	static float tolP;
+	static int M_safeguard;
+	static int wavelet_level;
 
-	int getBlockSize() const {
-		return blockSize;
-	}
 
-	void setBlockSize(int blockSize = 8) {
-		this->blockSize = blockSize;
-	}
 
-//	double getC() const {
-//		return C;
-//	}
-
-//	void setC(double c = 1.0) {
-//		C = c;
-//	}
-
-	int getM() const {
-		return M;
-	}
-
-	void setM(int m = 4) {
-		M = m;
-	}
-
-	double getMk() const {
-		return Mk;
-	}
-
-	void setMk(double mk = 0.4) {
-		Mk = mk;
-	}
-
-	double getMw() const {
-		return Mw;
-	}
-
-	void setMw(double mw = 0.2) {
-		Mw = mw;
-	}
+	static void parseOptionsFile(char* filename);
+	static void parseAndSetKeyValue(std::string key, float value);
 };
 
 #endif /* OPTIONS_H_ */

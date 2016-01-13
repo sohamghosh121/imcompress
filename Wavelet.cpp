@@ -6,6 +6,7 @@
  */
 
 #include "Wavelet.h"
+#include "Options.h"
 #include "blitzwave/WaveletDecomp.h"
 #include <blitz/array.h>
 # include <stddef.h>
@@ -44,7 +45,7 @@ void Wavelet::encode(){
 	                    blitz::shape(this->in.rows,
 	                    this->in.cols),
 	                    blitz::neverDeleteData);
-	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, 2);
+	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, Options::wavelet_level);
 	decomp.apply(tmp);
 	out = naiveBlitzToCvMat(tmp);
 }
@@ -54,7 +55,7 @@ void Wavelet::decode(){
 		                    blitz::shape(this->in.rows,
 		                    this->in.cols),
 		                    blitz::neverDeleteData);
-	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, 2);
+	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, Options::wavelet_level);
 	decomp.applyInv(tmp);
 	out = naiveBlitzToCvMat(tmp);
 }

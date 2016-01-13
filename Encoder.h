@@ -15,7 +15,6 @@
 
 class Encoder {
 private:
-	const Options opts;
 
 	// generate phi matrix
 	cv::Mat getPhi(double);

@@ -15,34 +15,35 @@ using namespace cv;
 Encoder::Encoder(Mat img) {
 	this->img = img;
 	this->img.convertTo(this->img, CV_32FC1);
-	this->keyPhi = getPhi(opts.getMk());
-	this->nonkeyPhi = getPhi(opts.getMw());
+	this->keyPhi = getPhi(Options::Mk);
+	this->nonkeyPhi = getPhi(Options::Mw);
 }
 
 
 cv::Mat Encoder::getPhi(double measurementRate){  // measurement rate = Mr/B^2
-	double B_sq = opts.getBlockSize() * opts.getBlockSize();
+	double B_sq = Options::blockSize * Options::blockSize;
 	return getPhi(int(measurementRate * B_sq), B_sq);
 }
 
 cv::Mat Encoder::getPhi(int m, int n){
-	SBHE h = SBHE(m, n, n / 8, 11);
+//	int B = 1.0 / pow(m, 2)
+	SBHE h = SBHE(m, n, n / 4, 61);
 	return h.getSBHEmat();
 }
 
 Mat Encoder::getNthBlock(int n, Mat gob){ // this is 0 indexed
-	assert(n >= 0 && n < opts.getM() * opts.getM());
-	return gob.rowRange(n*opts.getBlockSize()*opts.getBlockSize(), (n+1)*opts.getBlockSize()*opts.getBlockSize()).clone();
+	assert(n >= 0 && n < Options::M * Options::M);
+	return gob.rowRange(n*Options::blockSize*Options::blockSize, (n+1)*Options::blockSize*Options::blockSize).clone();
 }
 
 Mat Encoder::getGOB(int n){
-	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(opts.getBlockSize(), 2) * pow(opts.getM(), 2))));
+	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(Options::blockSize, 2) * pow(Options::M, 2))));
 	int rowStart, colStart;
-	int nc = this->f.cols / (opts.getBlockSize() * opts.getM());
-	colStart = (n % nc) * opts.getBlockSize() * opts.getM();
-	rowStart = (n / nc) *opts.getBlockSize() * opts.getM();
-	Mat x = Mat(this->f.colRange(colStart, colStart+opts.getBlockSize() * opts.getM()).rowRange(rowStart, rowStart+opts.getBlockSize() * opts.getM()));
-	return x.clone().reshape(1, opts.getBlockSize()*opts.getBlockSize()*opts.getM()*opts.getM());
+	int nc = this->f.cols / (Options::blockSize * Options::M);
+	colStart = (n % nc) * Options::blockSize * Options::M;
+	rowStart = (n / nc) *Options::blockSize * Options::M;
+	Mat x = Mat(this->f.colRange(colStart, colStart+Options::blockSize * Options::M).rowRange(rowStart, rowStart+Options::blockSize * Options::M));
+	return x.clone().reshape(1, Options::blockSize*Options::blockSize*Options::M*Options::M);
 }
 
 Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
@@ -62,19 +63,19 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 
 void Encoder::encodeImage(){
 	assert(img.cols == img.rows);
-	int numGOBs = this->img.cols * this->img.rows/(pow(opts.getBlockSize(), 2) * pow(opts.getM(), 2));
+	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize, 2) * pow(Options::M, 2));
 	Mat y;
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
-		for (int j = 0; j < pow(opts.getM(), 2); j++){
+		for (int j = 0; j < pow(Options::M, 2); j++){
 			Mat block = getNthBlock(j, gob);
 			if (j == 0){  // key block
 				y = encodeKeyBlock(block);
 			} else {
 				y = encodeNonKeyBlock(block);
 			}
-			encoded[i*pow(opts.getM(),2) +j] = y;
+			encoded[i*pow(Options::M,2) +j] = y;
 		}
 	}
 }

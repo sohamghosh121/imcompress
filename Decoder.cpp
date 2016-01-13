@@ -6,8 +6,10 @@
  */
 
 #include "Decoder.h"
+
+#include "SpaRSA_noSI.h"
+#include "SpaRSA_withSI.h"
 #include "Wavelet.h"
-#include "SpaRSA.h"
 
 using namespace cv;
 
@@ -25,14 +27,14 @@ Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> e
 void Decoder::decodeImage(){
 	int i = 0;
 	for (i = 0; i < this->encoded.size(); i++){
-		if (i % (opts.getM() * opts.getM()) == 0) { // key block
+		if (i % (Options::M * Options::M) == 0) { // key block
 			Mat block = decodeBlock(this->encoded[i], this->keyPhi);
-			block = block.reshape(1, opts.getBlockSize());
+			block = block.reshape(1, Options::blockSize);
 			fillNthBlock(i, block);
 		} else {
 			Mat block = decodeBlock(this->encoded[i], this->nonkeyPhi);
 
-			block = block.reshape(1, opts.getBlockSize());
+			block = block.reshape(1, Options::blockSize);
 			fillNthBlock(i, block);
 		}
 	}
@@ -41,23 +43,25 @@ void Decoder::decodeImage(){
 }
 
 Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){
-	SpaRSA solver = SpaRSA(block, phi);
-	Mat f_ = solver.reconstructed();
+	SpaRSA_noSI l2l1_solver = SpaRSA_noSI(block, phi);
+	SpaRSA *solver = &l2l1_solver;
+	solver->runAlgorithm();
+	Mat f_ = solver->reconstructed();
 	return f_;
 }
 
 void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed
-	assert(n >= 0 && n < (this->f.cols * this->f.rows)/(this->opts.getBlockSize() * this->opts.getBlockSize()));
-	int whichGOB = int(double(n)/pow(opts.getM(),2));
-	int blockOffset = n % int(pow(opts.getM(), 2));
+	assert(n >= 0 && n < (this->f.cols * this->f.rows)/(Options::blockSize * Options::blockSize));
+	int whichGOB = int(double(n)/pow(Options::M,2));
+	int blockOffset = n % int(pow(Options::M, 2));
 
-	int n_gob_y = this->f.cols / (opts.getBlockSize() * opts.getM());
-	int gob_colStart = (whichGOB % n_gob_y) * (opts.getBlockSize() * opts.getM());
-	int gob_rowStart = int(whichGOB / n_gob_y) * (opts.getBlockSize() * opts.getM());
-	int rowStart = gob_rowStart + (blockOffset % opts.getM()) * opts.getBlockSize();
-	int colStart = gob_colStart + int(blockOffset / opts.getM()) * opts.getBlockSize();
+	int n_gob_y = this->f.cols / (Options::blockSize * Options::M);
+	int gob_colStart = (whichGOB % n_gob_y) * (Options::blockSize * Options::M);
+	int gob_rowStart = int(whichGOB / n_gob_y) * (Options::blockSize * Options::M);
+	int rowStart = gob_rowStart + (blockOffset % Options::M) * Options::blockSize;
+	int colStart = gob_colStart + int(blockOffset / Options::M) * Options::blockSize;
 //	printf("block %d: (%d,%d)\t\t\t gob_rowStart=%d  gob_colStart=%d  \n", n, rowStart, colStart, gob_rowStart, gob_colStart);
-	Mat tmpblock = this->f.colRange(colStart, colStart+this->opts.getBlockSize()).rowRange(rowStart, rowStart + this->opts.getBlockSize());
+	Mat tmpblock = this->f.colRange(colStart, colStart+Options::blockSize).rowRange(rowStart, rowStart + Options::blockSize);
 	assert(tmpblock.rows == block.rows && tmpblock.cols == block.cols);
 	block.copyTo(tmpblock);
 }

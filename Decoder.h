@@ -13,7 +13,6 @@
 
 class Decoder {
 private:
-	const Options opts;
 
 	cv::Mat keyPhi;
 	cv::Mat nonkeyPhi;

@@ -2,6 +2,7 @@
 .project
 .checkstyle
 Debug/*
+input/*
 # Object files
 *.o
 *.ko

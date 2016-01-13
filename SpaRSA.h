@@ -12,11 +12,11 @@
 #include <cmath>
 
 class SpaRSA {
-private:
+protected:
 	const float eta = 2.0;
-	const float tau = 0.01;
-	const float sigma = 0.001;
-	const float tolP = 0.001;
+	const float tau = 0.02;
+	const float sigma = 0.01;
+	const float tolP = 0.0001;
 	const size_t maxIter = 1000;
 	const size_t maxItersPerCycle = 20;
 	const int M = 5;
@@ -26,25 +26,23 @@ private:
 	std::deque<double> objectiveFunctionValues;
 	cv::Mat x_t, x_t_plus_1, x_t_minus_1;
 
-	cv::Mat y, phi;
 
-	void chooseAlpha();
+
+	virtual void chooseAlpha() = 0;
 	void updateAlpha();
 	void updateObjectiveValues(float);
-	void runAlgorithm();
 	void runOuterIteration();
 	void runInnerIteration();
 	bool checkAcceptanceCriterion(); // return true if acceptance criterion is met
 	bool checkStoppingCriterion(); // return true if stopping criterion is met
-	void solveSubproblem(); // solve x_{t+1} sub problem
-	float objectiveFunctionValue(cv::Mat);
-
-	float soft(float u, float a);
-	cv::Mat del_f(cv::Mat x);
+	virtual void solveSubproblem() = 0; // solve x_{t+1} sub problem
+	virtual float objectiveFunctionValue(cv::Mat) = 0;
+	virtual cv::Mat del_f(cv::Mat x) = 0;
 public:
-	SpaRSA(cv::Mat y, cv::Mat phi);
+	SpaRSA(cv::Size);
+	void runAlgorithm();
 	cv::Mat reconstructed();
-	virtual ~SpaRSA();
+	virtual ~SpaRSA() = 0;
 };
 
 #endif /* SPARSA_H_ */
