@@ -12,11 +12,11 @@
 
 class SpaRSA_withSI : public SpaRSA {
 protected:
-	cv::Mat y, phi, si;
+	cv::Mat si;
 	float lambda;  // another regularisation term -_-
 
-	void chooseAlpha();
 	void solveSubproblem(); // solve x_{t+1} sub problem
+	float solve(float z, float u, float w);
 	float objectiveFunctionValue(cv::Mat);
 	cv::Mat del_f(cv::Mat x);
 public:

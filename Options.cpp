@@ -12,18 +12,19 @@
 #include <string>
 
 
-float Options::Mk = 0.8;
-float Options::Mw = 0.6;
-int Options::blockSize = 8;
+float Options::Mk = 0.5;
+float Options::Mw = 0.5;
+int Options::blockSize = 16;
 int Options::M = 2;
 int Options::B = 32;
-int Options::A = 509;
+int Options::A = 255;
 float Options::eta = 2.0;
-float Options::tau = 0.02;
-float Options::sigma = 0.001;
-float Options::tolP = 0.0001;
+float Options::tau = 0.02; //increasing helps, but makes it slower (more sparse solution)
+float Options::lambda = 0.05;
+float Options::sigma = 0.001; // decreasing doesn't help much
+float Options::tolP = 0.00001; // decreasing helps
 int Options::M_safeguard = 5;
-int Options::wavelet_level = 2;
+int Options::wavelet_level = 100; // increasing this helps a lot
 
 Options::Options() {
 
@@ -33,6 +34,7 @@ Options::Options() {
 
 void Options::parseAndSetKeyValue(std::string key, float value){
 	if (key.compare("blockSize")){
+		std::cout << "blocksize = " << key << ": " << value << "\n";
 		blockSize = int(value);
 	} else if (key.compare("Mk")){
 		Mk = value;
@@ -69,7 +71,7 @@ void Options::parseOptionsFile(char * filename){
 	std::cout << "Options\n------------------------------\n";
 	while(fp >> key >> value){
 		std::cout << key << ": " << value << "\n";
-//		parseAndSetKeyValue(key, value);
+		parseAndSetKeyValue(key, value);
 	}
 	fp.close();
 	std::cout << "------------------------------\n";

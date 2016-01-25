@@ -27,7 +27,7 @@ cv::Mat Encoder::getPhi(double measurementRate){  // measurement rate = Mr/B^2
 
 cv::Mat Encoder::getPhi(int m, int n){
 //	int B = 1.0 / pow(m, 2)
-	SBHE h = SBHE(m, n, n / 4, 61);
+	SBHE h = SBHE(m, n, 61);
 	return h.getSBHEmat();
 }
 
@@ -47,6 +47,7 @@ Mat Encoder::getGOB(int n){
 }
 
 Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
+	x = SBHE::scrambleInputSignal(x, Options::A);
 	Mat res = Mat(phi.rows, 1, CV_32FC1);
 	Mat zero = Mat::zeros(phi.rows, 1, CV_32FC1);
 	gemm(phi, x, 1.0, noArray(), 0.0, res);
@@ -61,11 +62,27 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 	return encodeBlock(x, this->nonkeyPhi);
 }
 
+float sparsity(Mat &f){
+	int total_elem = f.rows * f.cols;
+	int zeros = 0;
+	for (int i = 0; i < f.rows; i++){
+		for (int j = 0; j < f.cols; j++){
+			if (abs(f.at<float>(i, j)) < 5){
+//				f.at<float>(i, j) = 0.0;
+				zeros++;
+			}
+		}
+	}
+	return float(zeros)/float(total_elem);
+}
+
 void Encoder::encodeImage(){
 	assert(img.cols == img.rows);
-	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize, 2) * pow(Options::M, 2));
+	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize * Options::M, 2));
 	Mat y;
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
+	std::cout << "sparsity:  " << sparsity(f) << "\n";
+//	std::cout << s(f) << "\n";
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
 		for (int j = 0; j < pow(Options::M, 2); j++){
@@ -75,6 +92,7 @@ void Encoder::encodeImage(){
 			} else {
 				y = encodeNonKeyBlock(block);
 			}
+//			std::cout << "encoded block " << i << "\n";
 			encoded[i*pow(Options::M,2) +j] = y;
 		}
 	}

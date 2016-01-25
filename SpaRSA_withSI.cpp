@@ -6,21 +6,19 @@
  */
 
 #include "SpaRSA_withSI.h"
+#include "Options.h"
 
 using namespace cv;
 
-SpaRSA_withSI::SpaRSA_withSI(Mat y, Mat phi, Mat si) : SpaRSA(Size(1,phi.cols)){
+SpaRSA_withSI::SpaRSA_withSI(Mat y, Mat phi, Mat si) : SpaRSA(y, phi){
 	this->y = y;
 	this->phi = phi;
 	this->si = si;
+	this->lambda = Options::lambda;
 }
 
 SpaRSA_withSI::~SpaRSA_withSI() {
 	// TODO Auto-generated destructor stub
-}
-
-void SpaRSA_withSI::chooseAlpha(){
-//	alpha_t *= this->alphaFactor;
 }
 
 float SpaRSA_withSI::objectiveFunctionValue(Mat x){
@@ -31,6 +29,30 @@ float SpaRSA_withSI::objectiveFunctionValue(Mat x){
 }
 
 void SpaRSA_withSI::solveSubproblem(){
+	Mat u = x_t - 1/alpha_t * (del_f(x_t));  // equation 7
+	for (int i = 0; i < u.rows; i++){
+		x_t_plus_1.at<float>(i,0) = solve(x_t.at<float>(i, 0), u.at<float>(i,0), si.at<float>(i, 0)); // equation 12
+	}
+}
+
+float SpaRSA_withSI::solve(float z, float u, float w){
+	if (w < 0){
+		if (u - tau/alpha_t - lambda < w){
+			return u - tau/alpha_t - lambda;
+		} else if (u - tau/alpha_t + lambda < 0){
+			return u - tau/alpha_t + lambda;
+		} else {
+			return u + tau/alpha_t + lambda;
+		}
+	} else {
+		if (u - tau/alpha_t - lambda < 0){
+			return u - tau/alpha_t - lambda;
+		} else if (u + tau/alpha_t - lambda < w){
+			return u + tau/alpha_t - lambda;
+		} else {
+			return u + tau/alpha_t + lambda;
+		}
+	}
 }
 
 Mat SpaRSA_withSI::del_f(Mat x){

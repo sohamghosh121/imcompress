@@ -12,7 +12,6 @@
 
 class SpaRSA_noSI : public SpaRSA{
 protected:
-	cv::Mat y, phi;
 
 	void chooseAlpha();
 	void solveSubproblem(); // solve x_{t+1} sub problem

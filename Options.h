@@ -23,6 +23,7 @@ public:
 	static int A;
 	static float eta;
 	static float tau;
+	static float lambda;
 	static float sigma;
 	static float tolP;
 	static int M_safeguard;

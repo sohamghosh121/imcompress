@@ -9,7 +9,7 @@
 
 using namespace cv;
 
-SpaRSA_noSI::SpaRSA_noSI(Mat y, Mat phi) : SpaRSA(Size(1, phi.cols)){
+SpaRSA_noSI::SpaRSA_noSI(Mat y, Mat phi) : SpaRSA(y, phi){
 	// TODO Auto-generated constructor stub
 	this->phi = phi;
 	this->y = y;

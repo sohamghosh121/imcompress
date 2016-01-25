@@ -29,26 +29,12 @@ bool isPowerOfTwo (unsigned int x)
 	return (x == 1);
 }
 
-SBHE::SBHE(int M, int N, int B, int A) {
-	assert(N % B == 0 && isPowerOfTwo(B));
+SBHE::SBHE(int M, int N, int A) {
+	assert(isPowerOfTwo(N));
 	this->SBHEmat = Mat::zeros(M, N, CV_32FC1);
 	Mat m = Mat::zeros(N, N, CV_32FC1);
-	Mat hadamard = generateHadamardMatrix(int(log2(B)));
-	int hadamardBlockSize = hadamard.cols;
-	for (int i = 0; i < N/B; i++){
-		hadamard.copyTo(m.rowRange(hadamardBlockSize*i,hadamardBlockSize*(i+1)).colRange(hadamardBlockSize*i,hadamardBlockSize*(i+1)));
-	}
-	m = scrambleMatrix(m, A);
-	this->SBHEmat = chooseMrows(m, M);
-}
-
-Mat SBHE::scrambleMatrix(Mat H, int A){
-	Mat scrambled = H.clone();
-	int n = H.rows * H.cols, i;
-	for (i = 0; i < n; i++){
-		scrambled.at<double>(pt(i, H)) = H.at<double>(pt(getPi(i,n,A), H));
-	}
-	return scrambled;
+	Mat hadamard = generateHadamardMatrix(int(log2(N)));
+	this->SBHEmat = chooseMrows(hadamard, M);
 }
 
 Mat SBHE::chooseMrows(Mat m, int M){
@@ -82,6 +68,26 @@ Mat SBHE::generateHadamardMatrix(int n){
 		H_.copyTo(H.rowRange(half, full).colRange(half, full));
 	}
 	return H;
+}
+
+Mat SBHE::scrambleInputSignal(Mat & signal, int A){
+	Mat scrambled_signal = Mat::zeros(signal.size(), CV_32FC1);
+	int pi;
+	for (int i = 0; i < signal.rows; i++){
+		pi = (A * i) % signal.rows;
+		scrambled_signal.at<float>(i, 0) = signal.at<float>(pi, 0) ;
+	}
+	return scrambled_signal;
+}
+
+Mat SBHE::unscrambleInputSignal(Mat & scrambled_signal, int A){
+	Mat signal = Mat::zeros(scrambled_signal.size(), CV_32FC1);
+	int pi;
+	for (int i = 0; i < signal.rows; i++){
+		pi = (A * i) % signal.rows;
+		signal.at<float>(pi, 0) = scrambled_signal.at<float>(i, 0);
+	}
+	return signal;
 }
 
 Mat SBHE::getSBHEmat(){
