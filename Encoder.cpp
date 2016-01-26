@@ -26,14 +26,16 @@ cv::Mat Encoder::getPhi(double measurementRate){  // measurement rate = Mr/B^2
 }
 
 cv::Mat Encoder::getPhi(int m, int n){
-//	int B = 1.0 / pow(m, 2)
 	SBHE h = SBHE(m, n, 61);
 	return h.getSBHEmat();
 }
 
 Mat Encoder::getNthBlock(int n, Mat gob){ // this is 0 indexed
 	assert(n >= 0 && n < Options::M * Options::M);
-	return gob.rowRange(n*Options::blockSize*Options::blockSize, (n+1)*Options::blockSize*Options::blockSize).clone();
+	int rowStart = int(n / Options::M) * Options::blockSize;
+	int colStart = int(n % Options::M) * Options::blockSize;
+//	 std::cout << rowStart << ", " << colStart << "\n";
+	return gob.colRange(colStart, colStart+Options::blockSize).rowRange(rowStart, rowStart + Options::blockSize).clone().reshape(1, pow(Options::blockSize, 2));
 }
 
 Mat Encoder::getGOB(int n){
@@ -41,9 +43,12 @@ Mat Encoder::getGOB(int n){
 	int rowStart, colStart;
 	int nc = this->f.cols / (Options::blockSize * Options::M);
 	colStart = (n % nc) * Options::blockSize * Options::M;
-	rowStart = (n / nc) *Options::blockSize * Options::M;
+	rowStart = (n / nc) * Options::blockSize * Options::M;
+
 	Mat x = Mat(this->f.colRange(colStart, colStart+Options::blockSize * Options::M).rowRange(rowStart, rowStart+Options::blockSize * Options::M));
-	return x.clone().reshape(1, Options::blockSize*Options::blockSize*Options::M*Options::M);
+	Mat GOB = x.clone();
+//	printf("GOB: %d     (%d, %d)      shape: (%d, %d)\n", n, rowStart, colStart, GOB.rows, GOB.cols);
+	return GOB;
 }
 
 Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
@@ -81,18 +86,20 @@ void Encoder::encodeImage(){
 	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize * Options::M, 2));
 	Mat y;
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
-	std::cout << "sparsity:  " << sparsity(f) << "\n";
-//	std::cout << s(f) << "\n";
+	// std::cout << "sparsity:  " << sparsity(f) << "\n";
+//	// std::cout << s(f) << "\n";
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
 		for (int j = 0; j < pow(Options::M, 2); j++){
 			Mat block = getNthBlock(j, gob);
 			if (j == 0){  // key block
+//				std::cout << "ENCODE key block " << i*pow(Options::M,2) +j << "\n";
 				y = encodeKeyBlock(block);
 			} else {
+//				std::cout << "ENCODE nonkey block " << i*pow(Options::M,2) +j << "\n";
 				y = encodeNonKeyBlock(block);
 			}
-//			std::cout << "encoded block " << i << "\n";
+
 			encoded[i*pow(Options::M,2) +j] = y;
 		}
 	}

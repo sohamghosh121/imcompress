@@ -19,20 +19,25 @@ public:
 	static float Mw;
 	static int blockSize;
 	static int M;
-	static int B;
 	static int A;
 	static float eta;
 	static float tau;
 	static float lambda;
 	static float sigma;
 	static float tolP;
+	static float tolD;
 	static int M_safeguard;
 	static int wavelet_level;
+	static size_t maxIter;
+	static size_t minIter;
+	static size_t maxDebiasIter;
+	static size_t maxItersPerCycle;
 
 
 
 	static void parseOptionsFile(char* filename);
 	static void parseAndSetKeyValue(std::string key, float value);
+	static void dumpOptions();
 };
 
 #endif /* OPTIONS_H_ */

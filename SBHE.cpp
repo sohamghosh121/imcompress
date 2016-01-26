@@ -75,8 +75,10 @@ Mat SBHE::scrambleInputSignal(Mat & signal, int A){
 	int pi;
 	for (int i = 0; i < signal.rows; i++){
 		pi = (A * i) % signal.rows;
-		scrambled_signal.at<float>(i, 0) = signal.at<float>(pi, 0) ;
+		scrambled_signal.at<float>(i, 0) =  signal.at<float>(pi, 0);
 	}
+//	std::cout << signal;
+//	std::cout << "\n" << scrambled_signal;
 	return scrambled_signal;
 }
 
@@ -87,6 +89,9 @@ Mat SBHE::unscrambleInputSignal(Mat & scrambled_signal, int A){
 		pi = (A * i) % signal.rows;
 		signal.at<float>(pi, 0) = scrambled_signal.at<float>(i, 0);
 	}
+//	std::cout << "\n" << scrambled_signal;
+//	std::cout << signal;
+
 	return signal;
 }
 

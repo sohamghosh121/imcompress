@@ -15,6 +15,11 @@ SpaRSA::SpaRSA(Mat y, Mat phi) {
 	this->tau = Options::tau;
 	this->eta = Options::eta;
 	this->M = Options::M_safeguard;
+	this->maxIter = Options::maxIter;
+	this->minIter = Options::minIter;
+	this->tolP = Options::tolP;
+	this->tolD = Options::tolD;
+	this->maxItersPerCycle = Options::maxItersPerCycle;
 	x_t = Mat::zeros(size, CV_32FC1); // initialises to zero (lines 417-432 SpaRSA.m)
 	x_t_plus_1 = Mat::zeros(size, CV_32FC1);
 	x_t_minus_1 = Mat::zeros(size, CV_32FC1);
@@ -27,10 +32,10 @@ void SpaRSA::warmStart(Mat x){
 void SpaRSA::runAlgorithm(){
 	t = 0;
 	this->objectiveFunctionValues.clear();
-	std::cout << "Initial objective: " << objectiveFunctionValue(x_t) << "\n";
+//	// std::cout << "Initial objective: " << objectiveFunctionValue(x_t) << "\n";
 	updateObjectiveValues(objectiveFunctionValue(x_t)); // update with initial value
 	runOuterIteration();
-	std::cout << "t: " << t << std::endl;
+//	// std::cout << "t: " << t << std::endl;
 }
 
 void SpaRSA::chooseAlpha(){
@@ -40,7 +45,7 @@ void SpaRSA::chooseAlpha(){
 		Mat phi_diff;
 		gemm(phi, diff, 1.0, noArray(), 0.0, phi_diff);
 		double dGd = pow(norm(phi_diff, NORM_L2), 2);
-//		std::cout << "\tdd: " << dd << "\tdGd: " << dGd;
+//		// std::cout << "\tdd: " << dd << "\tdGd: " << dGd;
 		alpha_t = fmin(this->alpha_max, fmax(this->alpha_min, dGd/dd));
 }
 
@@ -50,8 +55,8 @@ void SpaRSA::runOuterIteration(){
 		runInnerIteration();
 		x_t.copyTo(x_t_minus_1);
 		x_t_plus_1.copyTo(x_t);
-//		std::cout << x_t.t() << "\n";
-		std::cout << "t: " << t << "\tobj: " << objectiveFunctionValue(x_t) << "\talpha: " << alpha_t ;
+//		// std::cout << x_t.t() << "\n";
+//		// std::cout << "t: " << t << "\tobj: " << objectiveFunctionValue(x_t) << "\talpha: " << alpha_t ;
 		t++;
 		updateObjectiveValues(objectiveFunctionValue(x_t));
 		if (checkStoppingCriterion())
@@ -91,11 +96,10 @@ void SpaRSA::runDebiasingPhase(){
 	float tol_debias = tolD * rTr_cg;
 	rvec.copyTo(pvec);
 	pvec = -pvec;
-//	std::cout << "target: " << tol_debias;
-//	std::cout << "####";
+//	// std::cout << "target: " << tol_debias;
+//	// std::cout << "####";
 
 	while(true){
-//		std::cout << rTr_cg << " ";
 		Mat RWpvec, Apvec;
 		gemm(phi, pvec, 1.0, noArray(), 0.0, RWpvec);
 		gemm(phi.t(), RWpvec, 1.0, noArray(), 0.0, Apvec);
@@ -114,15 +118,18 @@ void SpaRSA::runDebiasingPhase(){
 		pvec = -rvec + beta_cg * pvec;
 		rTr_cg = rTr_cg_plus;
 		debias_t++;
-		if (rTr_cg < tol_debias || debias_t > maxDebiasIter)
+		if (rTr_cg < tol_debias || debias_t > maxDebiasIter){
+//			std::cout << "debias_t: " << debias_t << "     rTr_cg "  << rTr_cg << "  target  "<< tol_debias << "\n";
 			break;
+		}
 	}
+	x_debias.copyTo(x_t);
 
-//	std::cout << "####\n";
+//	// std::cout << "####\n";
 }
 
 void SpaRSA::updateAlpha(){
-	std::cout << "(t=" << t << ") obj: " << objectiveFunctionValue(x_t_plus_1) << " not accepted, raising alpha to " << alpha_t * eta << "\n";
+//	// std::cout << "(t=" << t << ") obj: " << objectiveFunctionValue(x_t_plus_1) << " not accepted, raising alpha to " << alpha_t * eta << "\n";
 	alpha_t = eta * alpha_t;
 }
 
@@ -155,7 +162,7 @@ bool SpaRSA::checkStoppingCriterion(){ // first using simple termination criteri
 	if (t < minIter){
 		return false;
 	}
-	std::cout << "\t rel_change: " << norm(x_t - x_t_minus_1, NORM_L2)/norm(x_t, NORM_L2) << "\n";
+//	// std::cout << "\t rel_change: " << norm(x_t - x_t_minus_1, NORM_L2)/norm(x_t, NORM_L2) << "\n";
 	if (norm(x_t - x_t_minus_1, NORM_L2)/norm(x_t, NORM_L2) <= tolP){
 		return true;
 	} else

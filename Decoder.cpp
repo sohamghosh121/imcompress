@@ -32,9 +32,9 @@ void Decoder::decodeImage(){
 //	Mat joint_y = Mat::zeros(joint_phi.rows, 1, CV_32FC1);
 //	Mat joint_x = Mat::zeros(joint_phi.cols, 1,CV_32FC1);
 //	// creating matrices for joint reconstruction
-//	std::cout << "creating joint matrices\n";
+//	// std::cout << "creating joint matrices\n";
 //	for (i = 0; i < this->encoded.size(); i++){
-//		std::cout << i << "\n";
+//		// std::cout << i << "\n";
 //		if (i % (Options::M * Options::M) == 0) { // key block
 //			keyPhi.copyTo(joint_phi.rowRange(diag_idx_y,diag_idx_y + keyPhi.rows).colRange(diag_idx_x, diag_idx_x + keyPhi.cols));
 //			diag_idx_y += keyPhi.rows;
@@ -47,11 +47,12 @@ void Decoder::decodeImage(){
 //		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
 //		joint_y_idx += encoded[i].rows;
 //	}
-//	std::cout << "doing reconstruction\n";
+//	// std::cout << "doing reconstruction\n";
 	for (i = 0; i < this->encoded.size(); i++){
 
 		if (i % (Options::M * Options::M) == 0) { // key block
-//			std::cout << "key\n";
+//			// std::cout << "key\n";
+//			std::cout << "DECODE key block " << i << "\n";
 			Mat block = decodeBlock(this->encoded[i], this->keyPhi);
 			DecodedBlock db;
 //			db.measurements = encoded[i];
@@ -61,13 +62,14 @@ void Decoder::decodeImage(){
 			block = block.reshape(1, Options::blockSize);
 			fillNthBlock(i, block);
 		} else {
-//			std::cout << "nonkey\n";
+//			// std::cout << "nonkey\n";
+//			std::cout << "DECODE nonkey block " << i << "\n";
 			Mat block = decodeBlock(this->encoded[i], this->nonkeyPhi);
 //			Mat si = findSI(first_reconstruction);
-//			std::cout << "ok without SI";
+//			// std::cout << "ok without SI";
 //			Mat block = decodeBlockWithSI(encoded[i], nonkeyPhi, si, first_reconstruction);
 			block = block.reshape(1, Options::blockSize);
-//			std::cout << "noooooo";
+//			// std::cout << "noooooo";
 			fillNthBlock(i, block);
 		}
 	}
@@ -99,7 +101,7 @@ Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){
 	SpaRSA_noSI nosi_solver = SpaRSA_noSI(block, phi);
 	SpaRSA *solver = &nosi_solver;
 	solver->runAlgorithm();
-//	solver->runDebiasingPhase();
+	solver->runDebiasingPhase();
 	Mat f_ = solver->reconstructed();
 	return SBHE::unscrambleInputSignal(f_, Options::A);
 }
@@ -109,7 +111,7 @@ Mat Decoder::decodeBlockWithSI(Mat block, Mat phi, Mat si, Mat rec){
 	SpaRSA *solver = &withsi_solver;
 	solver->warmStart(rec);
 	solver->runAlgorithm();
-//	solver->runDebiasingPhase();
+	solver->runDebiasingPhase();
 	Mat f_ = solver->reconstructed();
 	return f_;
 }
@@ -124,7 +126,7 @@ void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed
 	int gob_rowStart = int(whichGOB / n_gob_y) * (Options::blockSize * Options::M);
 	int rowStart = gob_rowStart + int(blockOffset / Options::M) * Options::blockSize;
 	int colStart = gob_colStart + int(blockOffset % Options::M) * Options::blockSize;
-	printf("n: %d, GOB: %d, offset: %d, (%d,%d)\n", n, whichGOB, blockOffset, rowStart, colStart);
+//	printf("n: %d, GOB: %d, offset: %d, (%d,%d)\n", n, whichGOB, blockOffset, rowStart, colStart);
 	Mat tmpblock = this->f.colRange(colStart, colStart+Options::blockSize).rowRange(rowStart, rowStart + Options::blockSize);
 	assert(tmpblock.rows == block.rows && tmpblock.cols == block.cols);
 	block.copyTo(tmpblock);

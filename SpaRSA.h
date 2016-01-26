@@ -14,13 +14,13 @@
 class SpaRSA {
 protected:
 	float eta = 2.0;
-	float tau = 0.2;
-	float sigma = 0.001;
+	float tau = 1;
+	float sigma = 0.01;
 	float tolP = 0.0001;
-	float tolD = 0.0001;
+	float tolD = 0.0000001;
 	size_t maxIter = 500;
 	size_t minIter = 10;
-	size_t maxDebiasIter = 200;
+	size_t maxDebiasIter = 500;
 	size_t maxItersPerCycle = 10;
 	int M = 5;
 	float alpha_t = 1.0;
