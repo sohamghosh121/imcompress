@@ -8,6 +8,9 @@
 #ifndef SPARSA_H_
 #define SPARSA_H_
 
+
+#include "Options.h"
+
 #include <opencv2/opencv.hpp>
 #include <cmath>
 
@@ -31,7 +34,7 @@ protected:
 	cv::Mat y, phi;
 
 
-	void chooseAlpha();
+	virtual void chooseAlpha();
 	void updateAlpha();
 	void updateObjectiveValues(float);
 	void runOuterIteration();

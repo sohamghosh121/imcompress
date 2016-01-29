@@ -9,6 +9,7 @@
 #include "SBHE.h"
 
 #include "SpaRSA_noSI.h"
+#include "SpaRSA_joint.h"
 #include "SpaRSA_withSI.h"
 #include "Wavelet.h"
 
@@ -27,57 +28,41 @@ Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> e
 
 void Decoder::decodeImage(){
 	int i = 0; //, diag_idx_x = 0, diag_idx_y = 0, joint_y_idx = 0, joint_x_idx = 0;
-//	int num_rows = (keyPhi.rows + (Options::M - 1) * nonkeyPhi.rows) * (pow(img.rows / double(Options::M * Options::blockSize), 2));
-//	Mat joint_phi = Mat::zeros(num_rows, img.rows * img.cols, CV_32FC1);
-//	Mat joint_y = Mat::zeros(joint_phi.rows, 1, CV_32FC1);
-//	Mat joint_x = Mat::zeros(joint_phi.cols, 1,CV_32FC1);
-//	// creating matrices for joint reconstruction
-//	// std::cout << "creating joint matrices\n";
-//	for (i = 0; i < this->encoded.size(); i++){
-//		// std::cout << i << "\n";
-//		if (i % (Options::M * Options::M) == 0) { // key block
-//			keyPhi.copyTo(joint_phi.rowRange(diag_idx_y,diag_idx_y + keyPhi.rows).colRange(diag_idx_x, diag_idx_x + keyPhi.cols));
-//			diag_idx_y += keyPhi.rows;
-//			diag_idx_x += keyPhi.cols;
-//		} else {
-//			nonkeyPhi.copyTo(joint_phi.rowRange(diag_idx_y,diag_idx_y + nonkeyPhi.rows).colRange(diag_idx_x, diag_idx_x + keyPhi.cols));
-//			diag_idx_y += nonkeyPhi.rows;
-//			diag_idx_x += nonkeyPhi.cols;
-//		}
-//		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
-//		joint_y_idx += encoded[i].rows;
-//	}
-//	// std::cout << "doing reconstruction\n";
+	int num_rows = (keyPhi.rows + (pow(Options::M, 2) - 1) * nonkeyPhi.rows) * (pow(img.rows / double(Options::M * Options::blockSize), 2));
+	Mat joint_y = Mat::zeros(num_rows, 1, CV_32FC1);
+	Mat joint_x = Mat::zeros(pow(Options::blockSize, 2) * encoded.size(), 1,CV_32FC1);
+	int joint_y_idx = 0, joint_x_idx = 0;
 	for (i = 0; i < this->encoded.size(); i++){
-
+		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
+		joint_y_idx += encoded[i].rows;
+	}
+	for (i = 0; i < this->encoded.size(); i++){
+		Mat block;
 		if (i % (Options::M * Options::M) == 0) { // key block
-//			// std::cout << "key\n";
 //			std::cout << "DECODE key block " << i << "\n";
-			Mat block = decodeBlock(this->encoded[i], this->keyPhi);
-			DecodedBlock db;
+			block = decodeBlock(this->encoded[i], this->keyPhi);
+//			DecodedBlock db;
 //			db.measurements = encoded[i];
 //			db.decoded = block;
 //			decodedKeyBlocks.push_back(db);
-//			block.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + block.rows));
-			block = block.reshape(1, Options::blockSize);
-			fillNthBlock(i, block);
 		} else {
-//			// std::cout << "nonkey\n";
 //			std::cout << "DECODE nonkey block " << i << "\n";
-			Mat block = decodeBlock(this->encoded[i], this->nonkeyPhi);
+			block = decodeBlock(this->encoded[i], this->nonkeyPhi);
 //			Mat si = findSI(first_reconstruction);
-//			// std::cout << "ok without SI";
 //			Mat block = decodeBlockWithSI(encoded[i], nonkeyPhi, si, first_reconstruction);
-			block = block.reshape(1, Options::blockSize);
-//			// std::cout << "noooooo";
-			fillNthBlock(i, block);
 		}
+//		block.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + block.rows));
+		block = block.reshape(1, Options::blockSize);
+		fillNthBlock(i, block);
 	}
 	// do joint reconstruction
-//	SpaRSA_noSI solver = SpaRSA_noSI(joint_y, joint_phi);
-//	solver.warmStart(joint_x);
-//	solver.runAlgorithm();
-//	solver.reconstructed().reshape(1, img.rows).copyTo(img);
+	SpaRSA_joint joint_solver = SpaRSA_joint(joint_y, keyPhi, nonkeyPhi);
+	SpaRSA *solver = &joint_solver;
+	solver->warmStart(joint_x);
+	solver->runAlgorithm();
+//	solver->runDebiasingPhase();
+	solver->reconstructed().reshape(1, img.rows).copyTo(img);
+
 
 	this->img = Wavelet(f, Wavelet::IDWT).getResult();
 	this->img.convertTo(this->img, CV_8UC1);

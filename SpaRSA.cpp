@@ -6,11 +6,13 @@
  */
 
 #include "SpaRSA.h"
-#include "Options.h"
 
 using namespace cv;
 
 SpaRSA::SpaRSA(Mat y, Mat phi) {
+	this->phi = phi;
+	this->y = y;
+
 	Size size = Size(1, phi.cols);
 	this->tau = Options::tau;
 	this->eta = Options::eta;
@@ -26,7 +28,9 @@ SpaRSA::SpaRSA(Mat y, Mat phi) {
 }
 
 void SpaRSA::warmStart(Mat x){
-	x_t = x;
+	x.copyTo(x_t);
+	x_t_plus_1 = Mat::zeros(x.size(), CV_32FC1);
+	x_t_minus_1 = Mat::zeros(x.size(), CV_32FC1);
 }
 
 void SpaRSA::runAlgorithm(){

@@ -11,8 +11,6 @@
 using namespace cv;
 
 SpaRSA_withSI::SpaRSA_withSI(Mat y, Mat phi, Mat si) : SpaRSA(y, phi){
-	this->y = y;
-	this->phi = phi;
 	this->si = si;
 	this->lambda = Options::lambda;
 }
