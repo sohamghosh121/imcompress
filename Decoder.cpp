@@ -51,9 +51,10 @@ void Decoder::decodeImage(){
 //			Mat si = findSI(first_reconstruction);
 //			Mat block = decodeBlockWithSI(encoded[i], nonkeyPhi, si, first_reconstruction);
 		}
-//		block.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + block.rows));
-		block = block.reshape(1, Options::blockSize);
-		fillNthBlock(i, block);
+		block.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + block.rows));
+		joint_x_idx += block.rows;
+//		block = block.reshape(1, Options::blockSize);
+//		fillNthBlock(i, block);
 	}
 	// do joint reconstruction
 	SpaRSA_joint joint_solver = SpaRSA_joint(joint_y, keyPhi, nonkeyPhi);
@@ -61,9 +62,13 @@ void Decoder::decodeImage(){
 	solver->warmStart(joint_x);
 	solver->runAlgorithm();
 //	solver->runDebiasingPhase();
-	solver->reconstructed().reshape(1, img.rows).copyTo(img);
-
-
+	Mat final = solver->reconstructed();
+	for (i = 0; i < this->encoded.size(); i++){
+		Mat block;
+		block = final.rowRange(i * pow(Options::blockSize, 2), (i + 1) * pow(Options::blockSize, 2)).clone();
+		block = SBHE::unscrambleInputSignal(block, Options::A).reshape(1, Options::blockSize);
+		fillNthBlock(i, block);
+	}
 	this->img = Wavelet(f, Wavelet::IDWT).getResult();
 	this->img.convertTo(this->img, CV_8UC1);
 }
@@ -88,7 +93,8 @@ Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){
 	solver->runAlgorithm();
 	solver->runDebiasingPhase();
 	Mat f_ = solver->reconstructed();
-	return SBHE::unscrambleInputSignal(f_, Options::A);
+//	return SBHE::unscrambleInputSignal(f_, Options::A);
+	return f_;
 }
 
 Mat Decoder::decodeBlockWithSI(Mat block, Mat phi, Mat si, Mat rec){
