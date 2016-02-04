@@ -37,7 +37,7 @@ void Decoder::decodeImage(){
 		joint_y_idx += encoded[i].rows;
 	}
 	for (i = 0; i < this->encoded.size(); i++){
-		Mat block;
+		Mat block, first_reconstruction;
 		if (i % (Options::M * Options::M) == 0) { // key block
 //			std::cout << "DECODE key block " << i << "\n";
 			block = decodeBlock(this->encoded[i], this->keyPhi);
@@ -48,6 +48,7 @@ void Decoder::decodeImage(){
 		} else {
 //			std::cout << "DECODE nonkey block " << i << "\n";
 			block = decodeBlock(this->encoded[i], this->nonkeyPhi);
+//			first_reconstruction = decodeBlock(this->encoded[i], this->nonkeyPhi);
 //			Mat si = findSI(first_reconstruction);
 //			Mat block = decodeBlockWithSI(encoded[i], nonkeyPhi, si, first_reconstruction);
 		}
@@ -57,20 +58,24 @@ void Decoder::decodeImage(){
 //		fillNthBlock(i, block);
 	}
 	// do joint reconstruction
-	SpaRSA_joint joint_solver = SpaRSA_joint(joint_y, keyPhi, nonkeyPhi);
-	SpaRSA *solver = &joint_solver;
-	solver->warmStart(joint_x);
-	solver->runAlgorithm();
-//	solver->runDebiasingPhase();
-	Mat final = solver->reconstructed();
+	Mat final = joint_x;
+//	SpaRSA_joint joint_solver = SpaRSA_joint(joint_y, keyPhi, nonkeyPhi);
+//	SpaRSA *solver = &joint_solver;
+//	solver->warmStart(joint_x);
+//	solver->runAlgorithm();
+////	solver->runDebiasingPhase();
+//	final = solver->reconstructed();
+	std::cout << final.rows << ", " << final.cols << "\n";
 	for (i = 0; i < this->encoded.size(); i++){
 		Mat block;
 		block = final.rowRange(i * pow(Options::blockSize, 2), (i + 1) * pow(Options::blockSize, 2)).clone();
-		block = SBHE::unscrambleInputSignal(block, Options::A).reshape(1, Options::blockSize);
+		block = block.reshape(1, Options::blockSize);
 		fillNthBlock(i, block);
 	}
+	f = f.reshape(1, this->img.cols * this->img.rows);
+	f = SBHE::unscrambleInputSignal(f, Options::A).reshape(1, img.rows);
 	this->img = Wavelet(f, Wavelet::IDWT).getResult();
-	this->img.convertTo(this->img, CV_8UC1);
+	this->img.convertTo(img, CV_8UC1);
 }
 
 Mat Decoder::findSI(Mat decoded){

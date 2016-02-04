@@ -16,19 +16,19 @@ float Options::Mk = 0.6;
 float Options::Mw = 0.55;
 int Options::blockSize = 16;
 int Options::M = 2;
-int Options::A = 255;
+int Options::A = 997;
 float Options::eta = 2.0;
-float Options::tau = 0.00002; //increasing helps, but makes it slower (more sparse solution)
+float Options::tau = 0.002; //increasing helps, but makes it slower (more sparse solution)
 float Options::lambda = 0.05;
 float Options::sigma = 0.001; // decreasing doesn't help much
 float Options::tolP = 0.00001;
-float Options::tolD = 0.001; // decreasing helps
-int Options::M_safeguard = 5;
-int Options::wavelet_level = 20; // increasing this helps a lot
+float Options::tolD = 0.0001; // decreasing helps
+int Options::M_safeguard = 10;
+int Options::wavelet_level = 10; // increasing this helps a lot
 size_t Options::maxIter = 500;
 size_t Options::minIter = 10;
 size_t Options::maxDebiasIter = 200;
-size_t Options::maxItersPerCycle = 20;
+size_t Options::maxItersPerCycle = 100;
 
 Options::Options() {
 

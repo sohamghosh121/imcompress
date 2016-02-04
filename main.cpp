@@ -13,8 +13,8 @@ int main(int argc, char** argv) {
 	Options::dumpOptions();
 	std::cout << "-------------------\n";
 	std::cout << "Average measurement rate: " << (Options::Mk + Options::Mw * (Options::M * Options::M - 1))/(Options::M * Options::M) << "\n";
-	cv::Mat inputImage = cv::imread("/Users/sohamghosh/src/imcompress/photos/photo.jpg");
-	cv::cvtColor(inputImage, inputImage, CV_RGB2GRAY, 0); // ensure only 1 channel
+	cv::Mat inputImage = cv::imread("/Users/sohamghosh/src/imcompress/photos/lena.jpg");
+	cv::cvtColor(inputImage, inputImage, CV_RGB2GRAY);
 	clock_t startTime = clock();
 	Encoder e(inputImage);
 	e.encodeImage();
@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 	d.decodeImage();
 	std::cout << "Decoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
 	std::cout << "PSNR: " << cv::PSNR(inputImage, d.getDecodedImage()) << "dB" << std::endl;
-//	cv::imshow("Output", d.getDecodedImage());
-	cv::imwrite("/Users/sohamghosh/src/imcompress/photos/output.jpg", d.getDecodedImage());
-//	cv::waitKey(0);
+	cv::imwrite("/Users/sohamghosh/src/imcompress/photos/lena_out.jpg", d.getDecodedImage());
+	cv::imshow("Output", d.getDecodedImage());
+	cv::waitKey(0);
 	return 0;
 }

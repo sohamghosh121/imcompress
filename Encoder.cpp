@@ -52,7 +52,6 @@ Mat Encoder::getGOB(int n){
 }
 
 Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
-	x = SBHE::scrambleInputSignal(x, Options::A);
 	Mat res = Mat(phi.rows, 1, CV_32FC1);
 	Mat zero = Mat::zeros(phi.rows, 1, CV_32FC1);
 	gemm(phi, x, 1.0, noArray(), 0.0, res);
@@ -72,7 +71,7 @@ float sparsity(Mat &f){
 	int zeros = 0;
 	for (int i = 0; i < f.rows; i++){
 		for (int j = 0; j < f.cols; j++){
-			if (abs(f.at<float>(i, j)) < 5){
+			if (abs(f.at<float>(i, j)) < 0.01){
 //				f.at<float>(i, j) = 0.0;
 				zeros++;
 			}
@@ -86,7 +85,9 @@ void Encoder::encodeImage(){
 	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize * Options::M, 2));
 	Mat y;
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
-	// std::cout << "sparsity:  " << sparsity(f) << "\n";
+	f = f.reshape(1, this->img.cols * this->img.rows);
+	f = SBHE::scrambleInputSignal(f, Options::A).reshape(1, img.rows);
+//	 std::cout << "sparsity:  " << sparsity(f) << "\n";
 //	// std::cout << s(f) << "\n";
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);

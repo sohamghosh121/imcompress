@@ -71,6 +71,7 @@ Mat SBHE::generateHadamardMatrix(int n){
 }
 
 Mat SBHE::scrambleInputSignal(Mat & signal, int A){
+	assert(signal.cols == 1);
 	Mat scrambled_signal = Mat::zeros(signal.size(), CV_32FC1);
 	int pi;
 	for (int i = 0; i < signal.rows; i++){
@@ -83,6 +84,7 @@ Mat SBHE::scrambleInputSignal(Mat & signal, int A){
 }
 
 Mat SBHE::unscrambleInputSignal(Mat & scrambled_signal, int A){
+	assert(scrambled_signal.cols == 1);
 	Mat signal = Mat::zeros(scrambled_signal.size(), CV_32FC1);
 	int pi;
 	for (int i = 0; i < signal.rows; i++){
