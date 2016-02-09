@@ -12,7 +12,6 @@
 #include "SpaRSA_joint.h"
 #include "SpaRSA_withSI.h"
 #include "Wavelet.h"
-
 using namespace cv;
 
 // first try individual recovery
@@ -36,6 +35,7 @@ void Decoder::decodeImage(){
 		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
 		joint_y_idx += encoded[i].rows;
 	}
+//	std::thread threads[Options::M * Options::M];
 	for (i = 0; i < this->encoded.size(); i++){
 		Mat block, first_reconstruction;
 		if (i % (Options::M * Options::M) == 0) { // key block
@@ -59,13 +59,12 @@ void Decoder::decodeImage(){
 	}
 	// do joint reconstruction
 	Mat final = joint_x;
-//	SpaRSA_joint joint_solver = SpaRSA_joint(joint_y, keyPhi, nonkeyPhi);
-//	SpaRSA *solver = &joint_solver;
-//	solver->warmStart(joint_x);
-//	solver->runAlgorithm();
-////	solver->runDebiasingPhase();
-//	final = solver->reconstructed();
-	std::cout << final.rows << ", " << final.cols << "\n";
+	//	SpaRSA_joint joint_solver = SpaRSA_joint(joint_y, keyPhi, nonkeyPhi);
+	//	SpaRSA *solver = &joint_solver;
+	//	solver->warmStart(joint_x);
+	//	solver->runAlgorithm();
+	////	solver->runDebiasingPhase();
+	//	final = solver->reconstructed();
 	for (i = 0; i < this->encoded.size(); i++){
 		Mat block;
 		block = final.rowRange(i * pow(Options::blockSize, 2), (i + 1) * pow(Options::blockSize, 2)).clone();

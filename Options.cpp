@@ -18,7 +18,7 @@ int Options::blockSize = 16;
 int Options::M = 2;
 int Options::A = 997;
 float Options::eta = 2.0;
-float Options::tau = 0.002; //increasing helps, but makes it slower (more sparse solution)
+float Options::tau = 0.7; //increasing helps, but makes it slower (more sparse solution)
 float Options::lambda = 0.05;
 float Options::sigma = 0.001; // decreasing doesn't help much
 float Options::tolP = 0.00001;
@@ -28,6 +28,7 @@ int Options::wavelet_level = 10; // increasing this helps a lot
 size_t Options::maxIter = 500;
 size_t Options::minIter = 10;
 size_t Options::maxDebiasIter = 200;
+size_t Options::minDebiasIter = 5;
 size_t Options::maxItersPerCycle = 100;
 
 Options::Options() {
@@ -37,28 +38,40 @@ Options::Options() {
 
 
 void Options::parseAndSetKeyValue(std::string key, float value){
-	if (key.compare(std::string("blockSize"))){
+	if (key.compare(std::string("blockSize")) == 0){
 		blockSize = int(value);
-	} else if (key.compare(std::string("Mk"))){
+	} else if (key.compare(std::string("Mk")) == 0){
 		Mk = value;
-	} else if (key.compare(std::string("Mw"))){
+	} else if (key.compare(std::string("Mw")) == 0){
 		Mw = value;
-	} else if (key.compare(std::string("M"))){
+	} else if (key.compare(std::string("M")) == 0){
 		M = int(value);
-	} else if (key.compare(std::string("A"))){
+	} else if (key.compare(std::string("A")) == 0){
 		A = int(value);
-	} else if (key.compare(std::string("tau"))){
+	} else if (key.compare(std::string("tau")) == 0){
 		tau = value;
-	} else if (key.compare(std::string("sigma"))){
+	} else if (key.compare(std::string("sigma")) == 0){
 		sigma = value;
-	} else if (key.compare(std::string("tolP"))){
+	} else if (key.compare(std::string("tolP")) == 0){
 		tolP = value;
-	} else if (key.compare(std::string("eta"))){
+	} else if (key.compare(std::string("tolD")) == 0){
+		tolD = value;
+	} else if (key.compare(std::string("eta")) == 0){
 		eta = int(value);
-	} else if (key.compare(std::string("M_safeguard"))){
+	} else if (key.compare(std::string("M_safeguard")) == 0){
 		M_safeguard = int(value);
-	} else if (key.compare(std::string("wavelet_level"))){
+	} else if (key.compare(std::string("wavelet_level")) == 0){
 		wavelet_level = int(value);
+	} else if (key.compare(std::string("maxIter")) == 0){
+		maxIter = int(value);
+	} else if (key.compare(std::string("minIter")) == 0){
+		minIter = int(value);
+	} else if (key.compare(std::string("maxDebiasIter")) == 0){
+		maxDebiasIter = int(value);
+	} else if (key.compare(std::string("minDebiasIter")) == 0){
+		minDebiasIter = int(value);
+	} else if (key.compare(std::string("maxItersPerCycle")) == 0){
+		maxItersPerCycle = int(value);
 	} else {
 		std::cout << "Error parsing option file. Unrecognised parameter " << key;
 	}

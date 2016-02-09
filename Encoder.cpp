@@ -66,20 +66,6 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 	return encodeBlock(x, this->nonkeyPhi);
 }
 
-float sparsity(Mat &f){
-	int total_elem = f.rows * f.cols;
-	int zeros = 0;
-	for (int i = 0; i < f.rows; i++){
-		for (int j = 0; j < f.cols; j++){
-			if (abs(f.at<float>(i, j)) < 0.01){
-//				f.at<float>(i, j) = 0.0;
-				zeros++;
-			}
-		}
-	}
-	return float(zeros)/float(total_elem);
-}
-
 void Encoder::encodeImage(){
 	assert(img.cols == img.rows);
 	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize * Options::M, 2));
@@ -87,8 +73,6 @@ void Encoder::encodeImage(){
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
 	f = f.reshape(1, this->img.cols * this->img.rows);
 	f = SBHE::scrambleInputSignal(f, Options::A).reshape(1, img.rows);
-//	 std::cout << "sparsity:  " << sparsity(f) << "\n";
-//	// std::cout << s(f) << "\n";
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
 		for (int j = 0; j < pow(Options::M, 2); j++){
@@ -100,7 +84,6 @@ void Encoder::encodeImage(){
 //				std::cout << "ENCODE nonkey block " << i*pow(Options::M,2) +j << "\n";
 				y = encodeNonKeyBlock(block);
 			}
-
 			encoded[i*pow(Options::M,2) +j] = y;
 		}
 	}

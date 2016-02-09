@@ -31,6 +31,7 @@ public:
 	static size_t maxIter;
 	static size_t minIter;
 	static size_t maxDebiasIter;
+	static size_t minDebiasIter;
 	static size_t maxItersPerCycle;
 
 
