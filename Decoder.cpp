@@ -12,22 +12,24 @@
 #include "SpaRSA_joint.h"
 #include "SpaRSA_withSI.h"
 #include "Wavelet.h"
+#include <thread>
+
 using namespace cv;
 
-// first try individual recovery
+int NUM_DECODING_THREADS = 8;
 
 Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> encoded) {
 	this->encoded = encoded;
 	this->keyPhi = keyPhi;
 	this->nonkeyPhi = nonkeyPhi;
-	this->imsize = cv::Size(nr, nc);
+	this->imsize = cv::Size(nc, nr);
 	this->img = Mat::zeros(imsize, CV_32FC1);
 	this->f = Mat::zeros(imsize, CV_32FC1);
 }
 
 void Decoder::decodeImage(){
 	int i = 0; //, diag_idx_x = 0, diag_idx_y = 0, joint_y_idx = 0, joint_x_idx = 0;
-	int num_rows = (keyPhi.rows + (pow(Options::M, 2) - 1) * nonkeyPhi.rows) * (pow(img.rows / double(Options::M * Options::blockSize), 2));
+	int num_rows = (keyPhi.rows + (pow(Options::M, 2) - 1) * nonkeyPhi.rows) * (double(img.rows * img.cols)/ double(pow(Options::M * Options::blockSize, 2)));
 	Mat joint_y = Mat::zeros(num_rows, 1, CV_32FC1);
 	Mat joint_x = Mat::zeros(pow(Options::blockSize, 2) * encoded.size(), 1,CV_32FC1);
 	int joint_y_idx = 0, joint_x_idx = 0;
@@ -35,36 +37,17 @@ void Decoder::decodeImage(){
 		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
 		joint_y_idx += encoded[i].rows;
 	}
-//	std::thread threads[Options::M * Options::M];
 	for (i = 0; i < this->encoded.size(); i++){
 		Mat block, first_reconstruction;
 		if (i % (Options::M * Options::M) == 0) { // key block
-//			std::cout << "DECODE key block " << i << "\n";
 			block = decodeBlock(this->encoded[i], this->keyPhi);
-//			DecodedBlock db;
-//			db.measurements = encoded[i];
-//			db.decoded = block;
-//			decodedKeyBlocks.push_back(db);
 		} else {
-//			std::cout << "DECODE nonkey block " << i << "\n";
 			block = decodeBlock(this->encoded[i], this->nonkeyPhi);
-//			first_reconstruction = decodeBlock(this->encoded[i], this->nonkeyPhi);
-//			Mat si = findSI(first_reconstruction);
-//			Mat block = decodeBlockWithSI(encoded[i], nonkeyPhi, si, first_reconstruction);
 		}
 		block.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + block.rows));
 		joint_x_idx += block.rows;
-//		block = block.reshape(1, Options::blockSize);
-//		fillNthBlock(i, block);
 	}
-	// do joint reconstruction
 	Mat final = joint_x;
-	//	SpaRSA_joint joint_solver = SpaRSA_joint(joint_y, keyPhi, nonkeyPhi);
-	//	SpaRSA *solver = &joint_solver;
-	//	solver->warmStart(joint_x);
-	//	solver->runAlgorithm();
-	////	solver->runDebiasingPhase();
-	//	final = solver->reconstructed();
 	for (i = 0; i < this->encoded.size(); i++){
 		Mat block;
 		block = final.rowRange(i * pow(Options::blockSize, 2), (i + 1) * pow(Options::blockSize, 2)).clone();

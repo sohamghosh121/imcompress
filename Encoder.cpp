@@ -17,6 +17,8 @@ Encoder::Encoder(Mat img) {
 	this->img.convertTo(this->img, CV_32FC1);
 	this->keyPhi = getPhi(Options::Mk);
 	this->nonkeyPhi = getPhi(Options::Mw);
+	assert(img.rows % (Options::blockSize * Options::M) == 0);
+	assert(img.cols % (Options::blockSize * Options::M) == 0);
 }
 
 
@@ -67,7 +69,6 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 }
 
 void Encoder::encodeImage(){
-	assert(img.cols == img.rows);
 	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize * Options::M, 2));
 	Mat y;
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
