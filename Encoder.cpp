@@ -68,6 +68,23 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 	return encodeBlock(x, this->nonkeyPhi);
 }
 
+float getThreshold(Mat yw){
+	return 0.1;
+}
+
+float Encoder::getTau(Mat yw){
+	double minTillNow = DBL_MAX, mse = 0;
+	Mat diff;
+	for (Mat const& value: measurementsDictionary){
+		cv::absdiff(yw, value, diff);
+		double mse = norm(diff, NORM_L2);
+		if (mse < minTillNow){
+			minTillNow = mse;
+		}
+	}
+	return minTillNow;
+}
+
 void Encoder::encodeImage(){
 	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize * Options::M, 2));
 	Mat y;
@@ -78,14 +95,16 @@ void Encoder::encodeImage(){
 		Mat gob = getGOB(i);
 		for (int j = 0; j < pow(Options::M, 2); j++){
 			Mat block = getNthBlock(j, gob);
-			if (j == 0){  // key block
-//				std::cout << "ENCODE key block " << i*pow(Options::M,2) +j << "\n";
-				y = encodeKeyBlock(block);
+			Mat yw = encodeKeyBlock(block);
+			float lambda = getThreshold(yw);
+			float tau = getTau(yw);
+			if (tau > lambda){
+				encoded[i*pow(Options::M,2) +j] = yw;
+				measurementsDictionary.push_back(yw);
 			} else {
-//				std::cout << "ENCODE nonkey block " << i*pow(Options::M,2) +j << "\n";
-				y = encodeNonKeyBlock(block);
+				encoded[i*pow(Options::M,2) +j] = encodeNonKeyBlock(block);
 			}
-			encoded[i*pow(Options::M,2) +j] = y;
+
 		}
 	}
 }

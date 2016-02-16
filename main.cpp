@@ -16,9 +16,9 @@ int main(int argc, char** argv) {
 	e.encodeImage();
 	std::cout << "Encoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
 //
-	Decoder d(inputImage.rows, inputImage.cols, e.getKeyPhi(), e.getnonkeyPhi(), e.getEncodedValues());
-	d.decodeImage();
-	std::cout << "Decoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
-	std::cout << "PSNR: " << cv::PSNR(inputImage, d.getDecodedImage()) << "dB" << std::endl;
+//	Decoder d(inputImage.rows, inputImage.cols, e.getKeyPhi(), e.getnonkeyPhi(), e.getEncodedValues());
+//	d.decodeImage();
+//	std::cout << "Decoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
+//	std::cout << "PSNR: " << cv::PSNR(inputImage, d.getDecodedImage()) << "dB" << std::endl;
 	return 0;
 }

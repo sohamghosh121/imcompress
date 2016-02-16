@@ -17,6 +17,7 @@ class Encoder {
 private:
 
 	// generate phi matrix
+	std::vector<cv::Mat> measurementsDictionary;
 	cv::Mat getPhi(double);
 	cv::Mat getPhi(int, int);
 
@@ -34,6 +35,8 @@ private:
 	cv::Mat encodeBlock(cv::Mat, cv::Mat);
 	cv::Mat encodeKeyBlock(cv::Mat);
 	cv::Mat encodeNonKeyBlock(cv::Mat);
+
+	float getTau(cv::Mat);
 
 public:
 	Encoder(cv::Mat);
