@@ -20,6 +20,7 @@ public:
 	static int blockSize;
 	static int M;
 	static int A;
+	static float C;
 	static float eta;
 	static float tau;
 	static float lambda;

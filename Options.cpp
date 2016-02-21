@@ -17,6 +17,7 @@ float Options::Mw = 0.55;
 int Options::blockSize = 16;
 int Options::M = 2;
 int Options::A = 997;
+float Options::C = 200;
 float Options::eta = 2.0;
 float Options::tau = 0.7; //increasing helps, but makes it slower (more sparse solution)
 float Options::lambda = 0.05;
@@ -48,7 +49,9 @@ void Options::parseAndSetKeyValue(std::string key, float value){
 		M = int(value);
 	} else if (key.compare(std::string("A")) == 0){
 		A = int(value);
-	} else if (key.compare(std::string("tau")) == 0){
+	} else if (key.compare(std::string("C")) == 0){
+		C = float(value);
+	}else if (key.compare(std::string("tau")) == 0){
 		tau = value;
 	} else if (key.compare(std::string("sigma")) == 0){
 		sigma = value;

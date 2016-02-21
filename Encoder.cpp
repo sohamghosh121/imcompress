@@ -74,7 +74,7 @@ float getThreshold(Mat yw){
 		values.push_back(yw.at<float>(i,0));
 	}
 	std::nth_element(values.begin(), values.begin() + values.size()/2, values.end());
-	return values[values.size()/1];
+	return Options::C * values[values.size()/2];
 }
 
 float Encoder::getTau(Mat yw){
