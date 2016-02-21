@@ -29,21 +29,27 @@ Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> e
 
 void Decoder::decodeImage(){
 	int i = 0; //, diag_idx_x = 0, diag_idx_y = 0, joint_y_idx = 0, joint_x_idx = 0;
-	int num_rows = (keyPhi.rows + (pow(Options::M, 2) - 1) * nonkeyPhi.rows) * (double(img.rows * img.cols)/ double(pow(Options::M * Options::blockSize, 2)));
-	Mat joint_y = Mat::zeros(num_rows, 1, CV_32FC1);
+//	int num_rows = (keyPhi.rows + (pow(Options::M, 2) - 1) * nonkeyPhi.rows) * (double(img.rows * img.cols)/ double(pow(Options::M * Options::blockSize, 2)));
+//	Mat joint_y = Mat::zeros(num_rows, 1, CV_32FC1);
 	Mat joint_x = Mat::zeros(pow(Options::blockSize, 2) * encoded.size(), 1,CV_32FC1);
 	int joint_y_idx = 0, joint_x_idx = 0;
-	for (i = 0; i < this->encoded.size(); i++){
-		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
-		joint_y_idx += encoded[i].rows;
-	}
+	int numKey = 0, numNonKey = 0;
+//	for (i = 0; i < this->encoded.size(); i++){
+//		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
+//		joint_y_idx += encoded[i].rows;
+//	}
 	for (i = 0; i < this->encoded.size(); i++){
 		Mat block, first_reconstruction;
-		if (i % (Options::M * Options::M) == 0) { // key block
+		if (this->encoded[i].rows == this->keyPhi.rows) { // key block
 			block = decodeBlock(this->encoded[i], this->keyPhi);
-		} else {
+			numKey++;
+		} else if (this->encoded[i].rows == this->nonkeyPhi.rows){
 			block = decodeBlock(this->encoded[i], this->nonkeyPhi);
+			numNonKey++;
+		} else {
+			assert(false);
 		}
+
 		block.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + block.rows));
 		joint_x_idx += block.rows;
 	}
@@ -58,6 +64,7 @@ void Decoder::decodeImage(){
 	f = SBHE::unscrambleInputSignal(f, Options::A).reshape(1, img.rows);
 	this->img = Wavelet(f, Wavelet::IDWT).getResult();
 	this->img.convertTo(img, CV_8UC1);
+	std::cout << "Num key: " << numKey << "    " << "Num non key: " << numNonKey << "\n";
 }
 
 Mat Decoder::findSI(Mat decoded){

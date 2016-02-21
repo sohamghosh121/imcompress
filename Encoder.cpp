@@ -69,7 +69,12 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 }
 
 float getThreshold(Mat yw){
-	return 0.1;
+	std::vector<float> values;
+	for (int i = 0; i < yw.rows; i++){
+		values.push_back(yw.at<float>(i,0));
+	}
+	std::nth_element(values.begin(), values.begin() + values.size()/2, values.end());
+	return values[values.size()/1];
 }
 
 float Encoder::getTau(Mat yw){
