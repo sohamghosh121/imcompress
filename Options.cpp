@@ -6,7 +6,6 @@
  */
 
 #include "Options.h"
-//#include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <string>
@@ -82,13 +81,10 @@ void Options::parseOptionsFile(char * filename){
 	assert(fp.is_open());
 	std::string key;
 	float value;
-//	std::cout << "Options\n------------------------------\n";
 	while(fp >> key >> value){
-//		std::cout << key << ": " << value << "\n";
 		parseAndSetKeyValue(key, value);
 	}
 	fp.close();
-//	std::cout << "------------------------------\n";
 }
 
 void Options::dumpOptions()

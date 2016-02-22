@@ -17,7 +17,7 @@ Encoder::Encoder(Mat img) {
 	this->img.convertTo(this->img, CV_32FC1);
 	this->keyPhi = getPhi(Options::Mk);
 	this->nonkeyPhi = getPhi(Options::Mw);
-	assert(img.rows % (Options::blockSize * Options::M) == 0);
+	assert(img.rows % (Options::blockSize * Options::M) == 0); // divisibility assertions
 	assert(img.cols % (Options::blockSize * Options::M) == 0);
 }
 
@@ -40,6 +40,11 @@ Mat Encoder::getNthBlock(int n, Mat gob){ // this is 0 indexed
 	return gob.colRange(colStart, colStart+Options::blockSize).rowRange(rowStart, rowStart + Options::blockSize).clone().reshape(1, pow(Options::blockSize, 2));
 }
 
+
+/*
+ *  GOB: Group Of Blocks
+ *  - Each GOB has M x M blocks
+ */
 Mat Encoder::getGOB(int n){
 	assert(n >= 0 && n < (this->img.cols * this->img.rows/(pow(Options::blockSize, 2) * pow(Options::M, 2))));
 	int rowStart, colStart;
@@ -49,10 +54,13 @@ Mat Encoder::getGOB(int n){
 
 	Mat x = Mat(this->f.colRange(colStart, colStart+Options::blockSize * Options::M).rowRange(rowStart, rowStart+Options::blockSize * Options::M));
 	Mat GOB = x.clone();
-//	printf("GOB: %d     (%d, %d)      shape: (%d, %d)\n", n, rowStart, colStart, GOB.rows, GOB.cols);
 	return GOB;
 }
 
+/*
+ * Get CS measurements
+ * y = phi * x
+ */
 Mat Encoder::encodeBlock(Mat x, Mat phi){  // (MxN) x (Nx1)
 	Mat res = Mat(phi.rows, 1, CV_32FC1);
 	Mat zero = Mat::zeros(phi.rows, 1, CV_32FC1);
@@ -72,17 +80,15 @@ void Encoder::encodeImage(){
 	int numGOBs = this->img.cols * this->img.rows/(pow(Options::blockSize * Options::M, 2));
 	Mat y;
 	this->f = Wavelet(this->img, Wavelet::DWT).getResult();  // wavelet transform (CDF 9/7)
-	f = f.reshape(1, this->img.cols * this->img.rows);
+	f = f.reshape(1, this->img.cols * this->img.rows); // resize to N^2 x 1 vector
 	f = SBHE::scrambleInputSignal(f, Options::A).reshape(1, img.rows);
 	for (int i = 0; i < numGOBs; i++){
 		Mat gob = getGOB(i);
 		for (int j = 0; j < pow(Options::M, 2); j++){
-			Mat block = getNthBlock(j, gob);
-			if (j == 0){  // key block
-//				std::cout << "ENCODE key block " << i*pow(Options::M,2) +j << "\n";
+			Mat block = getNthBlock(j, gob); // given offset within GOB, get block (Nx1)
+			if (j == 0){ // first block of every GOB is a key block
 				y = encodeKeyBlock(block);
 			} else {
-//				std::cout << "ENCODE nonkey block " << i*pow(Options::M,2) +j << "\n";
 				y = encodeNonKeyBlock(block);
 			}
 			encoded[i*pow(Options::M,2) +j] = y;
