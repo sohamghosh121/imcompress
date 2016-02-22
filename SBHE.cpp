@@ -53,7 +53,9 @@ Mat SBHE::chooseMrows(Mat m, int M){
 	return m_;
 }
 
-
+/*
+ * Recursively generate Hadamard matrix of size 2^n
+ */
 Mat SBHE::generateHadamardMatrix(int n){
 	int half = pow(2,n-1), full = pow(2,n);
 	Mat H = Mat::zeros(full, full, CV_32FC1);
@@ -70,6 +72,11 @@ Mat SBHE::generateHadamardMatrix(int n){
 	return H;
 }
 
+/*
+ * Scrambling input signal of size Nx1
+ * - A is relatively prime to N
+ * - this is a reversible operator
+ */
 Mat SBHE::scrambleInputSignal(Mat & signal, int A){
 	assert(signal.cols == 1);
 	Mat scrambled_signal = Mat::zeros(signal.size(), CV_32FC1);
@@ -78,11 +85,12 @@ Mat SBHE::scrambleInputSignal(Mat & signal, int A){
 		pi = (A * i) % signal.rows;
 		scrambled_signal.at<float>(i, 0) =  signal.at<float>(pi, 0);
 	}
-//	std::cout << signal;
-//	std::cout << "\n" << scrambled_signal;
 	return scrambled_signal;
 }
 
+/*
+ * Unscramble signal of size Nx1
+ */
 Mat SBHE::unscrambleInputSignal(Mat & scrambled_signal, int A){
 	assert(scrambled_signal.cols == 1);
 	Mat signal = Mat::zeros(scrambled_signal.size(), CV_32FC1);
@@ -91,9 +99,6 @@ Mat SBHE::unscrambleInputSignal(Mat & scrambled_signal, int A){
 		pi = (A * i) % signal.rows;
 		signal.at<float>(pi, 0) = scrambled_signal.at<float>(i, 0);
 	}
-//	std::cout << "\n" << scrambled_signal;
-//	std::cout << signal;
-
 	return signal;
 }
 

@@ -71,7 +71,7 @@ Mat Encoder::encodeNonKeyBlock(Mat x){
 float getThreshold(Mat yw){
 	std::vector<float> values;
 	for (int i = 0; i < yw.rows; i++){
-		values.push_back(yw.at<float>(i,0));
+		values.push_back(abs(yw.at<float>(i,0)));
 	}
 	std::nth_element(values.begin(), values.begin() + values.size()/2, values.end());
 	return Options::C * values[values.size()/2];
