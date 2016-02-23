@@ -28,7 +28,7 @@ private:
 
 	void fillNthBlock(int, cv::Mat);
 	cv::Mat findSI(cv::Mat);
-	cv::Mat decodeBlock(cv::Mat, cv::Mat);
+	void decodeBlock(cv::Mat, cv::Mat, cv::Mat *);
 	cv::Mat decodeBlockWithSI(cv::Mat, cv::Mat, cv::Mat, cv::Mat);
 public:
 	Decoder(int, int, cv::Mat, cv::Mat, std::map<int, cv::Mat>);

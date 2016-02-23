@@ -12,6 +12,7 @@
 #include "SpaRSA_joint.h"
 #include "SpaRSA_withSI.h"
 #include "Wavelet.h"
+#include <thread>
 
 using namespace cv;
 
@@ -35,15 +36,31 @@ void Decoder::decodeImage(){
 		encoded[i].copyTo(joint_y.rowRange(joint_y_idx, joint_y_idx + encoded[i].rows));
 		joint_y_idx += encoded[i].rows;
 	}
-	for (i = 0; i < this->encoded.size(); i++){
-		Mat block, first_reconstruction;
-		if (i % (Options::M * Options::M) == 0) { // key block
-			block = decodeBlock(this->encoded[i], this->keyPhi);
-		} else {
-			block = decodeBlock(this->encoded[i], this->nonkeyPhi);
+	std::vector<Mat *> blocks;
+	std::vector<std::thread> threads;
+	int NUM_THREADS = 4;
+	assert (this->encoded.size() % NUM_THREADS == 0);
+	for (i = 0; i < this->encoded.size(); i += NUM_THREADS){
+		blocks.clear();
+		threads.clear();
+		for (int j =0; j < NUM_THREADS; j++){
+			blocks.push_back(new Mat());
+			if ((i + j) % (Options::M * Options::M) == 0) { // key block
+				threads.push_back(std::thread(&Decoder::decodeBlock, this, this->encoded[i+j], this->keyPhi, blocks[j]));
+			} else {
+				threads.push_back(std::thread(&Decoder::decodeBlock, this, this->encoded[i+j], this->nonkeyPhi, blocks[j]));
+			}
 		}
-		block.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + block.rows));
-		joint_x_idx += block.rows;
+		for (int j =0; j < NUM_THREADS; j++)
+			threads[j].join();
+
+		for (int j =0; j < NUM_THREADS; j++){
+			Mat b = *blocks[j];
+			b.copyTo(joint_x.rowRange(joint_x_idx, joint_x_idx + b.rows));
+			joint_x_idx += b.rows;
+		}
+
+
 	}
 	Mat final = joint_x;
 	for (i = 0; i < this->encoded.size(); i++){
@@ -77,13 +94,12 @@ Mat Decoder::findSI(Mat decoded){
 /*
  * Run SpaRSA solver for each block
  */
-Mat Decoder::decodeBlock(cv::Mat block, cv::Mat phi){
+void Decoder::decodeBlock(cv::Mat block, cv::Mat phi, cv::Mat * decoded){
 	SpaRSA_noSI nosi_solver = SpaRSA_noSI(block, phi);
 	SpaRSA *solver = &nosi_solver;
 	solver->runAlgorithm();
 	solver->runDebiasingPhase();
-	Mat f_ = solver->reconstructed();
-	return f_;
+	solver->reconstructed().copyTo(*decoded);
 }
 
 /*
