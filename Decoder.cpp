@@ -99,6 +99,9 @@ Mat Decoder::decodeBlockWithSI(Mat block, Mat phi, Mat si, Mat rec){
 	return f_;
 }
 
+/*
+ * Fill n-th block in image with decoded values
+ */
 void Decoder::fillNthBlock(int n, cv::Mat block){ // this is 0 indexed
 	assert(n >= 0 && n < (this->f.cols * this->f.rows)/(Options::blockSize * Options::blockSize));
 	int whichGOB = int(double(n)/pow(Options::M,2));
