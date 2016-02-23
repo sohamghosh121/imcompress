@@ -17,8 +17,8 @@ protected:
 
 	void solveSubproblem(); // solve x_{t+1} sub problem
 	float solve(float z, float u, float w);
-	float objectiveFunctionValue(cv::Mat);
-	cv::Mat del_f(cv::Mat x);
+	float objectiveFunctionValue(cv::Mat&);
+	cv::Mat del_f(cv::Mat& x);
 public:
 	SpaRSA_withSI(cv::Mat, cv::Mat, cv::Mat);
 	virtual ~SpaRSA_withSI();

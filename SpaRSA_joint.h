@@ -17,11 +17,11 @@ protected:
 	cv::Mat keyPhi, nonkeyPhi, keyPhi_T, nonkeyPhi_T;
 	void chooseAlpha();
 	void solveSubproblem(); // solve x_{t+1} sub problem
-	float objectiveFunctionValue(cv::Mat);
+	float objectiveFunctionValue(cv::Mat&);
 	float soft(float, float);
 	cv::Mat A_x(cv::Mat);
 	cv::Mat A_resid(cv::Mat);
-	cv::Mat del_f(cv::Mat x);
+	cv::Mat del_f(cv::Mat& x);
 public:
 	SpaRSA_joint(cv::Mat y, cv::Mat keyPhi, cv::Mat nonkeyPhi);
 	virtual ~SpaRSA_joint();

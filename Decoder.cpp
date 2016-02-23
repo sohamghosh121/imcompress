@@ -38,7 +38,7 @@ void Decoder::decodeImage(){
 	}
 	std::vector<Mat *> blocks;
 	std::vector<std::thread> threads;
-	int NUM_THREADS = 4;
+	int NUM_THREADS = 8;
 	assert (this->encoded.size() % NUM_THREADS == 0);
 	for (i = 0; i < this->encoded.size(); i += NUM_THREADS){
 		blocks.clear();

@@ -24,11 +24,10 @@ void SpaRSA_noSI::chooseAlpha(){
 		Mat phi_diff;
 		gemm(phi, diff, 1.0, noArray(), 0.0, phi_diff);
 		double dGd = pow(norm(phi_diff, NORM_L2), 2);
-//		std::cout << "\tdd: " << dd << "\tdGd: " << dGd;
 		alpha_t = fmin(this->alpha_max, fmax(this->alpha_min, dGd/dd));
 }
 
-float SpaRSA_noSI::objectiveFunctionValue(Mat x){
+float SpaRSA_noSI::objectiveFunctionValue(Mat& x){
 	Mat f;
 	gemm(phi, x, -1.0, y, 1.0, f);
 	double o = 0.5 * pow(norm(f, NORM_L2), 2) + tau * norm(x, NORM_L1); // l2 - l1
@@ -42,9 +41,8 @@ void SpaRSA_noSI::solveSubproblem(){
 	}
 }
 
-Mat SpaRSA_noSI::del_f(Mat x){
+Mat SpaRSA_noSI::del_f(Mat& x){
 	Mat resid;
-//	printf("x: (%d, %d)\tphi: (%d, %d)\n", x.rows, x.cols, phi.rows, phi.cols);
 	gemm(phi, x, 1.0, y, -1.0, resid);
 	Mat grad_q;
 	gemm(phi.t(), resid, 1.0, noArray(), 0.0, grad_q);

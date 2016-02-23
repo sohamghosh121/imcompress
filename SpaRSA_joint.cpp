@@ -27,7 +27,7 @@ void SpaRSA_joint::chooseAlpha(){
 		alpha_t = fmin(this->alpha_max, fmax(this->alpha_min, dGd/dd));
 }
 
-float SpaRSA_joint::objectiveFunctionValue(Mat x){
+float SpaRSA_joint::objectiveFunctionValue(Mat& x){
 //	std::cout << "obj\n";
 	Mat f;
 	f = y - A_x(x);
@@ -43,7 +43,7 @@ void SpaRSA_joint::solveSubproblem(){
 	}
 }
 
-Mat SpaRSA_joint::del_f(Mat x){
+Mat SpaRSA_joint::del_f(Mat& x){
 //	std::cout << "del_f\n";
 	Mat resid;
 	resid = y - A_x(x);

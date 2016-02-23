@@ -19,7 +19,7 @@ SpaRSA_withSI::~SpaRSA_withSI() {
 	// TODO Auto-generated destructor stub
 }
 
-float SpaRSA_withSI::objectiveFunctionValue(Mat x){
+float SpaRSA_withSI::objectiveFunctionValue(Mat& x){
 	Mat f;
 	gemm(phi, x, -1.0, y, 1.0, f);
 	double o = 0.5 * norm(f, NORM_L2) + tau * norm(x, NORM_L1) + lambda * norm(x - si, NORM_L2);
@@ -53,7 +53,7 @@ float SpaRSA_withSI::solve(float z, float u, float w){
 	}
 }
 
-Mat SpaRSA_withSI::del_f(Mat x){
+Mat SpaRSA_withSI::del_f(Mat& x){
 	Mat resid;
 //	printf("x: (%d, %d)\tphi: (%d, %d)\n", x.rows, x.cols, phi.rows, phi.cols);
 	gemm(phi, x, 1.0, y, -1.0, resid);

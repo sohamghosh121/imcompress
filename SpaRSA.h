@@ -43,8 +43,8 @@ protected:
 	bool checkStoppingCriterion(); // return true if stopping criterion is met
 
 	virtual void solveSubproblem() = 0; // solve x_{t+1} sub problem
-	virtual float objectiveFunctionValue(cv::Mat) = 0;
-	virtual cv::Mat del_f(cv::Mat x) = 0;
+	virtual float objectiveFunctionValue(cv::Mat&) = 0;
+	virtual cv::Mat del_f(cv::Mat& x) = 0;
 public:
 	SpaRSA(cv::Mat y, cv::Mat phi);
 	void runAlgorithm();

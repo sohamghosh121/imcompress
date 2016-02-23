@@ -15,8 +15,8 @@ protected:
 
 	void chooseAlpha();
 	void solveSubproblem(); // solve x_{t+1} sub problem
-	float objectiveFunctionValue(cv::Mat);
-	cv::Mat del_f(cv::Mat x);
+	float objectiveFunctionValue(cv::Mat&);
+	cv::Mat del_f(cv::Mat& x);
 	float soft(float u, float a);
 public:
 	SpaRSA_noSI(cv::Mat, cv::Mat);
