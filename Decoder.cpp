@@ -15,7 +15,7 @@
 
 using namespace cv;
 
-Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::map<int, Mat> encoded) {
+Decoder::Decoder(int nr, int nc, Mat keyPhi, Mat nonkeyPhi, std::vector<Mat> encoded) {
 	this->encoded = encoded;
 	this->keyPhi = keyPhi;
 	this->nonkeyPhi = nonkeyPhi;

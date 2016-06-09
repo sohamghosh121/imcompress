@@ -7,6 +7,7 @@ using namespace std;
 
 int main(int argc, char** argv) {
 	Options::parseOptionsFile("/Users/sohamghosh/src/imcompress/input/options");
+	Options::dumpOptions();
 	std::cout << "Average measurement rate: " << (Options::Mk + Options::Mw * (Options::M * Options::M - 1))/(Options::M * Options::M) << "\n";
 	cv::Mat inputImage = cv::imread(argv[1]);
 	cv::cvtColor(inputImage, inputImage, CV_RGB2GRAY);
@@ -15,10 +16,12 @@ int main(int argc, char** argv) {
 	Encoder e(inputImage);
 	e.encodeImage();
 	std::cout << "Encoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
-//
+	e.dumpEncoding(argv[2]);
+	e.loadEncoding(argv[2]);
 	Decoder d(inputImage.rows, inputImage.cols, e.getKeyPhi(), e.getnonkeyPhi(), e.getEncodedValues());
 	d.decodeImage();
 	std::cout << "Decoding image: " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << "s" << std::endl;
 	std::cout << "PSNR: " << cv::PSNR(inputImage, d.getDecodedImage()) << "dB" << std::endl;
+	cv::imwrite(argv[3], d.getDecodedImage());
 	return 0;
 }

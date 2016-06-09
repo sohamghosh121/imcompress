@@ -20,7 +20,7 @@ private:
 	cv::Mat getPhi(double);
 	cv::Mat getPhi(int, int);
 
-	std::map<int, cv::Mat> encoded;
+	std::vector<cv::Mat> encoded;
 	cv::Mat img;
 	cv::Mat f; // 2D wavelet transform of image
 
@@ -38,9 +38,11 @@ private:
 public:
 	Encoder(cv::Mat);
 	void encodeImage();
-	std::map<int, cv::Mat> getEncodedValues();
+	std::vector<cv::Mat> getEncodedValues();
 	cv::Mat getKeyPhi();
 	cv::Mat getnonkeyPhi();
+	void dumpEncoding(char * fileName);
+	void loadEncoding(char * fileName);
 	virtual ~Encoder();
 };
 

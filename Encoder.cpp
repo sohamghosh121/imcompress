@@ -9,6 +9,8 @@
 #include "SBHE.h"
 #include "Wavelet.h"
 #include <cmath>
+#include <fstream>
+
 
 using namespace cv;
 
@@ -91,7 +93,7 @@ void Encoder::encodeImage(){
 			} else {
 				y = encodeNonKeyBlock(block);
 			}
-			encoded[i*pow(Options::M,2) +j] = y;
+			encoded.push_back(y);
 		}
 	}
 }
@@ -103,8 +105,80 @@ cv::Mat Encoder::getnonkeyPhi(){
 	return this->nonkeyPhi;
 }
 
-std::map<int, cv::Mat> Encoder::getEncodedValues(){
+std::vector<cv::Mat> Encoder::getEncodedValues(){
 	return this->encoded;
+}
+
+void Encoder::dumpEncoding(char * fileName){
+	std::cout << "Dumping encoded values to " << fileName << "\n";
+	int b_sq = Options::blockSize * Options::blockSize;
+	int numBlocks = img.rows * img.cols / (Options::blockSize * Options::blockSize);
+	int numKeyBlocks = 1.0/(Options::M * Options::M) * numBlocks;
+	int numNonKeyBlocks = numBlocks - numKeyBlocks;
+	size_t num_items = (int(Options::Mk * b_sq) * numKeyBlocks + int(Options::Mw * b_sq) * numNonKeyBlocks); // number of key blocks * measurements from key blocks + number of non key blocks * measurements from non key blocks
+	cv::Mat saveMat = Mat::zeros(1, num_items, CV_32FC1);
+	std::ofstream file;
+	file.open(std::string("bit_") + std::string(fileName), std::ofstream::out | std::ofstream::binary);
+	bool negativeMap[num_items];
+	int c = 0;
+	for (int i = 0; i < encoded.size(); i++){
+		for (int j = 0; j < encoded[i].rows; j++, c++){
+			saveMat.at<float>(0, c) = 1000 * abs(encoded[i].at<float>(j, 0));
+			bool isNegative = encoded[i].at<float>(j, 0) < 0.0;
+			negativeMap[c] = isNegative;
+		}
+	}
+
+
+	saveMat.convertTo(saveMat, CV_16U);
+	file.write((char *)negativeMap, num_items/8); // num_items bits --> bytes
+
+	cv::imwrite(std::string(fileName), saveMat);
+}
+
+void Encoder::loadEncoding(char * fileName){
+	std::cout << "Loading encoded values from " << fileName << "\n";
+	// Do some calculations to get sizes of vectors/mat required
+	int b_sq = Options::blockSize * Options::blockSize;
+	int numBlocks = img.rows * img.cols / (Options::blockSize * Options::blockSize);
+	int numKeyBlocks = 1.0/(Options::M * Options::M) * numBlocks;
+	int numNonKeyBlocks = numBlocks - numKeyBlocks;
+	size_t num_items = (int(Options::Mk * b_sq) * numKeyBlocks + int(Options::Mw * b_sq) * numNonKeyBlocks); // number of key blocks * measurements from key blocks + number of non key blocks * measurements from non key blocks
+
+
+	encoded.clear();
+
+	cv::Mat loadMat = cv::imread(std::string(fileName), CV_LOAD_IMAGE_ANYDEPTH); // Load values
+	std::ifstream file;
+	file.open(std::string("bit_") + std::string(fileName), std::ifstream::in | std::ifstream::binary);
+	bool negativeMap[num_items];
+	file.read((char *) negativeMap, num_items/8);
+
+	 // load bit map of negative/positive
+
+	cv::Mat thisBlock;
+	int c = 0;
+	loadMat.convertTo(loadMat, CV_32FC1);
+	loadMat = loadMat / 1000;
+	int multiplier = 1;
+	for (int i = 0; i < numBlocks; i++){
+		if (i % (Options::M * Options::M) == 0){
+			thisBlock = Mat::zeros(Options::Mk * Options::blockSize * Options::blockSize, 1, CV_32FC1);
+		} else {
+			thisBlock = Mat::zeros(Options::Mw * Options::blockSize * Options::blockSize, 1, CV_32FC1);
+		}
+		for (int j = 0; j < thisBlock.rows; j++, c++){
+
+			if (negativeMap[c]) {
+				multiplier = -1;
+			} else {
+				multiplier = 1;
+			}
+			thisBlock.at<float>(j, 0) = multiplier * loadMat.at<float>(0, c);
+		}
+		encoded.push_back(thisBlock);
+	}
+
 }
 
 Encoder::~Encoder() {

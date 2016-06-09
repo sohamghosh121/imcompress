@@ -29,12 +29,12 @@ Wavelet::Wavelet(Mat img, int type) {
 }
 
 
-Mat naiveBlitzToCvMat(blitz::Array<float, 2> a){
+Mat naiveBlitzToCvMat(blitz::Array<float, 2> a, float multiplier){
 	int i, j;
 	Mat b = Mat(a.rows(), a.cols(), CV_32FC1);
 	for (i=0; i< a.rows(); i++){
 		for(j=0; j<a.cols(); j++){
-			b.at<float>(i,j) = a(i, j);
+			b.at<float>(i,j) = a(i, j) * multiplier;
 		}
 	}
 	return b;
@@ -47,7 +47,7 @@ void Wavelet::encode(){
 	                    blitz::neverDeleteData);
 	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, Options::wavelet_level);
 	decomp.apply(tmp);
-	out = naiveBlitzToCvMat(tmp);
+	out = naiveBlitzToCvMat(tmp, 0.001);
 }
 
 void Wavelet::decode(){
@@ -57,7 +57,7 @@ void Wavelet::decode(){
 		                    blitz::neverDeleteData);
 	bwave::WaveletDecomp<2> decomp(bwave::WL_CDF_97, bwave::NONSTD_DECOMP, Options::wavelet_level);
 	decomp.applyInv(tmp);
-	out = naiveBlitzToCvMat(tmp);
+	out = naiveBlitzToCvMat(tmp, 1000);
 }
 
 Mat Wavelet::getResult(){
